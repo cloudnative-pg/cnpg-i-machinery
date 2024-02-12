@@ -184,3 +184,14 @@ func (*Data) InjectPluginVolume(pod *corev1.Pod) {
 		}
 	}
 }
+
+// DecodeBackup decodes a JSON representation of a backup
+func (*Data) DecodeBackup(backupDefinition []byte) (*apiv1.Backup, error) {
+	var backup apiv1.Backup
+
+	if err := json.Unmarshal(backupDefinition, &backup); err != nil {
+		return nil, err
+	}
+
+	return &backup, nil
+}
