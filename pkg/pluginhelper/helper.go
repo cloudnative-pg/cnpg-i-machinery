@@ -42,43 +42,46 @@ type Data struct {
 	pluginIndex int
 }
 
-// NewFromCluster creates a new validation helper loading
-// a cluster definition
-func NewFromCluster(
-	pluginName string,
-	clusterDefinition []byte,
-) (*Data, error) {
+// DataBuilder a fluent constructor for the Data struct
+type DataBuilder struct {
+	pluginName  string
+	clusterJSON []byte
+	podJSON     []byte
+}
+
+// NewDataBuilder initializes a basic DataBuilder
+func NewDataBuilder(pluginName string, clusterJSON []byte) *DataBuilder {
+	d := DataBuilder{clusterJSON: clusterJSON, pluginName: pluginName}
+	d.clusterJSON = clusterJSON
+	return &d
+}
+
+// WithPod adds Pod data to the DataBuilder
+func (d *DataBuilder) WithPod(podJSON []byte) *DataBuilder {
+	d.podJSON = podJSON
+	return d
+}
+
+// Build returns the constructed Data object and any errors encountered
+func (d *DataBuilder) Build() (*Data, error) {
 	result := &Data{}
 
-	if err := json.Unmarshal(clusterDefinition, &result.cluster); err != nil {
+	if err := json.Unmarshal(d.clusterJSON, &result.cluster); err != nil {
 		return nil, err
+	}
+
+	if len(d.podJSON) > 0 {
+		if err := json.Unmarshal(d.podJSON, &result.pod); err != nil {
+			return nil, err
+		}
 	}
 
 	result.pluginIndex = -1
 	for idx, cfg := range result.cluster.Spec.Plugins {
-		if cfg.Name == pluginName {
+		if cfg.Name == d.pluginName {
 			result.pluginIndex = idx
 			result.Parameters = cfg.Parameters
 		}
-	}
-
-	return result, nil
-}
-
-// NewFromClusterAndPod creates a new validation helper loading
-// a cluster and a Pod definition
-func NewFromClusterAndPod(
-	pluginName string,
-	clusterDefinition []byte,
-	podDefinition []byte,
-) (*Data, error) {
-	result, err := NewFromCluster(pluginName, clusterDefinition)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := json.Unmarshal(podDefinition, &result.pod); err != nil {
-		return nil, err
 	}
 
 	return result, nil
