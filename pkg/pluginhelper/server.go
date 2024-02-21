@@ -38,7 +38,7 @@ const unixNetwork = "unix"
 
 // ServerEnricher is the type of functions that can add register
 // service implementations in a GRPC server
-type ServerEnricher func(*grpc.Server)
+type ServerEnricher func(*grpc.Server) error
 
 // CreateMainCmd creates a command to be used as the server side
 // for the CNPG-I infrastructure
@@ -124,7 +124,10 @@ func run(ctx context.Context, identityImpl identity.IdentityServer, enrichers ..
 		grpcServer,
 		identityImpl)
 	for _, enrich := range enrichers {
-		enrich(grpcServer)
+		err := enrich(grpcServer)
+		if err != nil {
+			return err
+		}
 	}
 
 	logger.Info(
