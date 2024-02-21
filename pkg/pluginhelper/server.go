@@ -45,8 +45,8 @@ type ServerEnricher func(*grpc.Server)
 func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnricher) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "pvc-backup",
-		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
-			ctx := logging.IntoContext(
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			ctx := logging.NewIntoContext(
 				cmd.Context(),
 				viper.GetBool("debug"))
 			cmd.SetContext(ctx)
