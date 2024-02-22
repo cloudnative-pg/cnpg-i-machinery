@@ -45,7 +45,7 @@ type ServerEnricher func(*grpc.Server) error
 func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnricher) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "pvc-backup",
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
 			ctx := logging.NewIntoContext(
 				cmd.Context(),
 				viper.GetBool("debug"))
@@ -124,9 +124,8 @@ func run(ctx context.Context, identityImpl identity.IdentityServer, enrichers ..
 		grpcServer,
 		identityImpl)
 	for _, enrich := range enrichers {
-		err := enrich(grpcServer)
-		if err != nil {
-			return err
+		if enrichErr := enrich(grpcServer); enrichErr != nil {
+			return enrichErr
 		}
 	}
 
