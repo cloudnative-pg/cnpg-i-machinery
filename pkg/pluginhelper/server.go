@@ -38,7 +38,7 @@ const unixNetwork = "unix"
 
 // ServerEnricher is the type of functions that can add register
 // service implementations in a GRPC server
-type ServerEnricher func(*grpc.Server)
+type ServerEnricher func(*grpc.Server) error
 
 // CreateMainCmd creates a command to be used as the server side
 // for the CNPG-I infrastructure
@@ -46,7 +46,7 @@ func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnri
 	cmd := &cobra.Command{
 		Use: "pvc-backup",
 		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
-			ctx := logging.IntoContext(
+			ctx := logging.NewIntoContext(
 				cmd.Context(),
 				viper.GetBool("debug"))
 			cmd.SetContext(ctx)
@@ -124,7 +124,9 @@ func run(ctx context.Context, identityImpl identity.IdentityServer, enrichers ..
 		grpcServer,
 		identityImpl)
 	for _, enrich := range enrichers {
-		enrich(grpcServer)
+		if enrichErr := enrich(grpcServer); enrichErr != nil {
+			return enrichErr
+		}
 	}
 
 	logger.Info(

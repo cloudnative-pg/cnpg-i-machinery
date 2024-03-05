@@ -46,10 +46,17 @@ func newLogger(debug bool) logr.Logger {
 	return result
 }
 
-// IntoContext injects the logger into this context, returning
+// IntoContext injects the logger into the passed context, returning
 // a context having the logger embedded. The logger can be recovered
 // with FromContext
-func IntoContext(ctx context.Context, debug bool) context.Context {
+func IntoContext(ctx context.Context, logger logr.Logger) context.Context {
+	return context.WithValue(ctx, loggerKey, logger)
+}
+
+// NewIntoContext injects a new logger into the passed context, returning
+// a context having the logger embedded. The logger can be recovered
+// with FromContext
+func NewIntoContext(ctx context.Context, debug bool) context.Context {
 	return context.WithValue(ctx, loggerKey, newLogger(debug))
 }
 
