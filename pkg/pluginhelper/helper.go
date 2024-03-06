@@ -22,7 +22,7 @@ import (
 
 	apiv1 "github.com/cloudnative-pg/cloudnative-pg/api/v1"
 	"github.com/cloudnative-pg/cnpg-i/pkg/operator"
-	jsonpatch "github.com/evanphx/json-patch/v5"
+	jsonpatch "github.com/snorwin/jsonpatch"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -100,33 +100,15 @@ func (helper *Data) GetPod() *corev1.Pod {
 // CreateClusterJSONPatch creates a JSON patch changing the cluster
 // that was loaded into this helper into the
 func (helper *Data) CreateClusterJSONPatch(newCluster apiv1.Cluster) ([]byte, error) {
-	originalCluster, err := json.Marshal(helper.cluster)
-	if err != nil {
-		return nil, err
-	}
-
-	currentCluster, err := json.Marshal(newCluster)
-	if err != nil {
-		return nil, err
-	}
-
-	return jsonpatch.CreateMergePatch(originalCluster, currentCluster)
+	patch, err := jsonpatch.CreateJSONPatch(newCluster, helper.cluster)
+	return []byte(patch.String()), err
 }
 
 // CreatePodJSONPatch creates a JSON patch changing the cluster
 // that was loaded into this helper into the
 func (helper *Data) CreatePodJSONPatch(newPod corev1.Pod) ([]byte, error) {
-	originalPod, err := json.Marshal(helper.pod)
-	if err != nil {
-		return nil, err
-	}
-
-	currentPod, err := json.Marshal(newPod)
-	if err != nil {
-		return nil, err
-	}
-
-	return jsonpatch.CreateMergePatch(originalPod, currentPod)
+	patch, err := jsonpatch.CreateJSONPatch(newPod, helper.pod)
+	return []byte(patch.String()), err
 }
 
 // ValidationErrorForParameter creates a validation error for a certain plugin
