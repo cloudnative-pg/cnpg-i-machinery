@@ -25,10 +25,6 @@ import (
 	"go.uber.org/zap"
 )
 
-type loggerKeyType string
-
-const loggerKey = loggerKeyType("logger")
-
 func newLogger(debug bool) logr.Logger {
 	var zapLog *zap.Logger
 	var err error
@@ -50,22 +46,27 @@ func newLogger(debug bool) logr.Logger {
 // a context having the logger embedded. The logger can be recovered
 // with FromContext
 func IntoContext(ctx context.Context, logger logr.Logger) context.Context {
-	return context.WithValue(ctx, loggerKey, logger)
+	return logr.NewContext(ctx, logger)
 }
 
 // NewIntoContext injects a new logger into the passed context, returning
 // a context having the logger embedded. The logger can be recovered
 // with FromContext
 func NewIntoContext(ctx context.Context, debug bool) context.Context {
-	return context.WithValue(ctx, loggerKey, newLogger(debug))
+	logger := newLogger(debug)
+	return IntoContext(ctx, logger)
 }
 
-// FromContext get the logger from thecontext
+// FromContext get the logger from the context, generating a new generic
+// logger if one is not found.
+//
+// This should probably have a means of panicking if a logger is not found
+// during development.
+//
 func FromContext(ctx context.Context) logr.Logger {
-	preValue := ctx.Value(loggerKey)
-	if preValue == nil {
+	logger, err := logr.FromContext(ctx)
+	if err != nil {
 		return newLogger(false)
 	}
-
-	return preValue.(logr.Logger)
+	return logger
 }
