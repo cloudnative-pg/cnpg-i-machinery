@@ -19,6 +19,7 @@ package pluginhelper
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"os"
 	"os/signal"
@@ -26,11 +27,11 @@ import (
 	"syscall"
 
 	"github.com/cloudnative-pg/cnpg-i/pkg/identity"
+	"github.com/go-logr/logr"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
-	"github.com/go-logr/logr"
 
 	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
 )
@@ -38,11 +39,11 @@ import (
 const unixNetwork = "unix"
 
 // ServerEnricher is the type of functions that can add register
-// service implementations in a GRPC server
+// service implementations in a GRPC server.
 type ServerEnricher func(*grpc.Server) error
 
 // CreateMainCmd creates a command to be used as the server side
-// for the CNPG-I infrastructure
+// for the CNPG-I infrastructure.
 func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnricher) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "plugin",
@@ -79,7 +80,7 @@ func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnri
 	return cmd
 }
 
-// run starts listining for GRPC requests
+// run starts listening for GRPC requests.
 func run(ctx context.Context, identityImpl identity.IdentityServer, enrichers ...ServerEnricher) error {
 	logger := logging.FromContext(ctx)
 
@@ -88,14 +89,14 @@ func run(ctx context.Context, identityImpl identity.IdentityServer, enrichers ..
 		&identity.GetPluginMetadataRequest{})
 	if err != nil {
 		logger.Error(err, "Error while querying the identity service")
-		return err
+		return fmt.Errorf("error while querying the identity service: %w", err)
 	}
 
 	pluginPath := viper.GetString("plugin-path")
-	pluginName := identityResponse.Name
-	pluginDisplayName := identityResponse.DisplayName
-	pluginVersion := identityResponse.Version
-	socketName := path.Join(pluginPath, identityResponse.Name)
+	pluginName := identityResponse.GetName()
+	pluginDisplayName := identityResponse.GetDisplayName()
+	pluginVersion := identityResponse.GetVersion()
+	socketName := path.Join(pluginPath, identityResponse.GetName())
 
 	// Remove stale unix socket it still existent
 	if err := removeStaleSocket(ctx, socketName); err != nil {
@@ -110,7 +111,7 @@ func run(ctx context.Context, identityImpl identity.IdentityServer, enrichers ..
 	)
 	if err != nil {
 		logger.Error(err, "While starting server")
-		return err
+		return fmt.Errorf("cannot listen on the socket: %w", err)
 	}
 
 	// Handle quit-like signal
@@ -150,7 +151,7 @@ func run(ctx context.Context, identityImpl identity.IdentityServer, enrichers ..
 	return nil
 }
 
-// removeStaleSocket removes a stale unix domain socket
+// removeStaleSocket removes a stale unix domain socket.
 func removeStaleSocket(ctx context.Context, pluginPath string) error {
 	logger := logging.FromContext(ctx)
 	_, err := os.Stat(pluginPath)
@@ -158,18 +159,23 @@ func removeStaleSocket(ctx context.Context, pluginPath string) error {
 	switch {
 	case err == nil:
 		logger.Info("Removing stale socket", "pluginPath", pluginPath)
-		return os.Remove(pluginPath)
+		err := os.Remove(pluginPath)
+		if err != nil {
+			return fmt.Errorf("error while removing stale socket: %w", err)
+		}
+
+		return nil
 
 	case errors.Is(err, os.ErrNotExist):
 		return nil
 
 	default:
-		return err
+		return fmt.Errorf("error while checking for stale socket: %w", err)
 	}
 }
 
 // handleSignals makes sure that we close the listening socket
-// when we receive a quit-like signal
+// when we receive a quit-like signal.
 func handleSignals(ctx context.Context, listener net.Listener) {
 	logger := logging.FromContext(ctx)
 
@@ -199,6 +205,7 @@ func panicRecoveryHandler(listener net.Listener) recovery.RecoveryHandlerFuncCon
 		}
 
 		os.Exit(1)
+
 		return nil
 	}
 }

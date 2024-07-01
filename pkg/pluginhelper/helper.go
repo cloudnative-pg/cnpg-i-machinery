@@ -18,11 +18,12 @@ package pluginhelper
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 
 	apiv1 "github.com/cloudnative-pg/cloudnative-pg/api/v1"
 	"github.com/cloudnative-pg/cnpg-i/pkg/operator"
-	jsonpatch "github.com/snorwin/jsonpatch"
+	"github.com/snorwin/jsonpatch"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -32,7 +33,7 @@ const (
 )
 
 // Data is an helper structure to be used by
-// plugins wanting to enhance the CNPG validating webhooks
+// plugins wanting to enhance the CNPG validating webhooks.
 type Data struct {
 	// Parameters are the configuration parameters of this plugin
 	Parameters map[string]string
@@ -42,37 +43,37 @@ type Data struct {
 	pluginIndex int
 }
 
-// DataBuilder a fluent constructor for the Data struct
+// DataBuilder a fluent constructor for the Data struct.
 type DataBuilder struct {
 	pluginName  string
 	clusterJSON []byte
 	podJSON     []byte
 }
 
-// NewDataBuilder initializes a basic DataBuilder
+// NewDataBuilder initializes a basic DataBuilder.
 func NewDataBuilder(pluginName string, clusterJSON []byte) *DataBuilder {
 	d := DataBuilder{clusterJSON: clusterJSON, pluginName: pluginName}
 	d.clusterJSON = clusterJSON
 	return &d
 }
 
-// WithPod adds Pod data to the DataBuilder
+// WithPod adds Pod data to the DataBuilder.
 func (d *DataBuilder) WithPod(podJSON []byte) *DataBuilder {
 	d.podJSON = podJSON
 	return d
 }
 
-// Build returns the constructed Data object and any errors encountered
+// Build returns the constructed Data object and any errors encountered.
 func (d *DataBuilder) Build() (*Data, error) {
 	result := &Data{}
 
 	if err := json.Unmarshal(d.clusterJSON, &result.cluster); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error unmarshalling cluster JSON: %w", err)
 	}
 
 	if len(d.podJSON) > 0 {
 		if err := json.Unmarshal(d.podJSON, &result.pod); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error unmarshalling pod JSON: %w", err)
 		}
 	}
 
@@ -87,32 +88,32 @@ func (d *DataBuilder) Build() (*Data, error) {
 	return result, nil
 }
 
-// GetCluster gets the decoded cluster object
+// GetCluster gets the decoded cluster object.
 func (helper *Data) GetCluster() *apiv1.Cluster {
 	return &helper.cluster
 }
 
-// GetPod gets the decoded pod object
+// GetPod gets the decoded pod object.
 func (helper *Data) GetPod() *corev1.Pod {
 	return &helper.pod
 }
 
 // CreateClusterJSONPatch creates a JSON patch changing the cluster
-// that was loaded into this helper into the
+// that was loaded into this helper into the cluster.
 func (helper *Data) CreateClusterJSONPatch(newCluster apiv1.Cluster) ([]byte, error) {
 	patch, err := jsonpatch.CreateJSONPatch(newCluster, helper.cluster)
 	return []byte(patch.String()), err
 }
 
 // CreatePodJSONPatch creates a JSON patch changing the cluster
-// that was loaded into this helper into the
+// that was loaded into this helper into the pod.
 func (helper *Data) CreatePodJSONPatch(newPod corev1.Pod) ([]byte, error) {
 	patch, err := jsonpatch.CreateJSONPatch(newPod, helper.pod)
 	return []byte(patch.String()), err
 }
 
 // ValidationErrorForParameter creates a validation error for a certain plugin
-// parameter
+// parameter.
 func (helper *Data) ValidationErrorForParameter(name, message string) *operator.ValidationError {
 	if helper.pluginIndex == -1 {
 		return &operator.ValidationError{
@@ -137,7 +138,7 @@ func (helper *Data) ValidationErrorForParameter(name, message string) *operator.
 	}
 }
 
-// InjectPluginVolume injects the plugin volume into a CNPG Pod
+// InjectPluginVolume injects the plugin volume into a CNPG Pod.
 func (*Data) InjectPluginVolume(pod *corev1.Pod) {
 	foundPluginVolume := false
 	for i := range pod.Spec.Volumes {
@@ -170,12 +171,12 @@ func (*Data) InjectPluginVolume(pod *corev1.Pod) {
 	}
 }
 
-// DecodeBackup decodes a JSON representation of a backup
+// DecodeBackup decodes a JSON representation of a backup.
 func (*Data) DecodeBackup(backupDefinition []byte) (*apiv1.Backup, error) {
 	var backup apiv1.Backup
 
 	if err := json.Unmarshal(backupDefinition, &backup); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error unmarshalling backup JSON: %w", err)
 	}
 
 	return &backup, nil
