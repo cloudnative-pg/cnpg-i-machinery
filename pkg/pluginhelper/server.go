@@ -30,6 +30,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
+	"github.com/go-logr/logr"
 
 	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
 )
@@ -44,12 +45,16 @@ type ServerEnricher func(*grpc.Server) error
 // for the CNPG-I infrastructure
 func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnricher) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "pvc-backup",
+		Use: "plugin",
 		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
-			ctx := logging.NewIntoContext(
-				cmd.Context(),
-				viper.GetBool("debug"))
-			cmd.SetContext(ctx)
+			_, err := logr.FromContext(cmd.Context())
+			if err == nil {
+				// caller did not supply a logger, inject one
+				ctx := logging.NewIntoContext(
+					cmd.Context(),
+					viper.GetBool("debug"))
+				cmd.SetContext(ctx)
+			}
 		},
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
