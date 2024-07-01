@@ -1,5 +1,5 @@
 matrix:
-- name: Python Source
+- name: Source
   sources:
   - ./**/*.go
   - ./**/*.md

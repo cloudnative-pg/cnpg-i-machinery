@@ -1,4 +1,8 @@
 {
-    "image": "mcr.microsoft.com/devcontainers/go:1-bullseye"
+  "image": "mcr.microsoft.com/devcontainers/go:1-bullseye",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+
+  "postCreateCommand": "curl -L https://dl.dagger.io/dagger/install.sh | BIN_DIR=$HOME/.local/bin sh; sh -c \"$(curl --location https://taskfile.dev/install.sh)\" -- -d -b $HOME/.local/bin",
 }
-  
