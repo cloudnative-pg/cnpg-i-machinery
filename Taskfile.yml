@@ -50,13 +50,14 @@ tasks:
     desc: Run go test
     env:
       # TODO: configure renovate
-      GOLANG_IMAGE_VERSION: golang:1.22.4
+      # renovate: datasource=docker depName=golang versioning=semver
+      GOLANG_IMAGE_VERSION: 1.22.4
       # renovate: datasource=git-refs depName=gotest lookupName=https://github.com/Excoriate/daggerverse currentValue=main
       DAGGER_GOTEST_SHA: f09d41cb90701db446048a9f20eb03495e50f727
     cmds:
       - >
         GITHUB_REF= dagger -s call -m github.com/Excoriate/daggerverse/gotest@90a5d911a70510f9004544d4a25d39d917f1f668
-        base --image-url ${GOLANG_IMAGE_VERSION}
+        base --image-url golang:${GOLANG_IMAGE_VERSION}
         with-cgo-disabled
         run-go-test --src .
 
