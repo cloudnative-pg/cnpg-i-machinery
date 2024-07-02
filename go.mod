@@ -11,7 +11,7 @@ require (
 	github.com/go-logr/zapr v1.2.4
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/snorwin/jsonpatch v1.4.0
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.14.0
 	go.uber.org/zap v1.26.0
 	google.golang.org/grpc v1.60.1
