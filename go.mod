@@ -8,7 +8,7 @@ require (
 	github.com/cloudnative-pg/cloudnative-pg v1.22.1-0.20240123130737-a22a155b9eb8
 	github.com/cloudnative-pg/cnpg-i v0.0.0-20240124144003-4c0a1ac46426
 	github.com/go-logr/logr v1.3.0
-	github.com/go-logr/zapr v1.2.4
+	github.com/go-logr/zapr v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/snorwin/jsonpatch v1.4.0
 	github.com/spf13/cobra v1.8.0
