@@ -39,19 +39,20 @@ func newLogger(debug bool) logr.Logger {
 	}
 
 	result := zapr.NewLogger(zapLog)
+
 	return result
 }
 
 // IntoContext injects the logger into the passed context, returning
 // a context having the logger embedded. The logger can be recovered
-// with FromContext
+// with FromContext.
 func IntoContext(ctx context.Context, logger logr.Logger) context.Context {
 	return logr.NewContext(ctx, logger)
 }
 
 // NewIntoContext injects a new logger into the passed context, returning
 // a context having the logger embedded. The logger can be recovered
-// with FromContext
+// with FromContext.
 func NewIntoContext(ctx context.Context, debug bool) context.Context {
 	logger := newLogger(debug)
 	return IntoContext(ctx, logger)
@@ -62,11 +63,11 @@ func NewIntoContext(ctx context.Context, debug bool) context.Context {
 //
 // This should probably have a means of panicking if a logger is not found
 // during development.
-//
 func FromContext(ctx context.Context) logr.Logger {
 	logger, err := logr.FromContext(ctx)
 	if err != nil {
 		return newLogger(false)
 	}
+
 	return logger
 }
