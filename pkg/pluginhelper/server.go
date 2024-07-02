@@ -189,12 +189,43 @@ func setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) {
 	serverKeyPath := viper.GetString("server-key")
 	clientCertPath := viper.GetString("client-cert")
 
+	logger := logging.FromContext(ctx).WithValues(
+		"serverCertPath", serverCertPath,
+		"serverKeyPath", serverKeyPath,
+		"clientCertPath", clientCertPath,
+	)
+
 	// There's no need to load the TLS stuff
 	// if the TCP server is not active
 	if serverCertPath == "" {
+		logger.Info("TCP server not active, skipping TLSCerts generation")
 		return nil, nil
 	}
 
+	if serverKeyPath == "" {
+		return nil, errors.New("TCP server active, but no server-key value passed")
+	}
+
+	if clientCertPath == "" {
+		return nil, errors.New("TCP server active, but no client-cert value passed")
+	}
+
+	tlsConfig, err := buildTLSConfig(ctx, serverCertPath, serverKeyPath, clientCertPath)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Info("Set up TLS authentication")
+	result := grpc.Creds(credentials.NewTLS(tlsConfig))
+	return &result, nil
+}
+
+func buildTLSConfig(
+	ctx context.Context,
+	serverCertPath string,
+	serverKeyPath string,
+	clientCertPath string,
+) (*tls.Config, error) {
 	logger := logging.FromContext(ctx).WithValues(
 		"serverCertPath", serverCertPath,
 		"serverKeyPath", serverKeyPath,
@@ -224,10 +255,7 @@ func setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) {
 		ClientCAs:    ca,
 		MinVersion:   tls.VersionTLS13,
 	}
-
-	logger.Info("Set up TLS authentication")
-	result := grpc.Creds(credentials.NewTLS(tlsConfig))
-	return &result, nil
+	return tlsConfig, nil
 }
 
 func createListener(ctx context.Context, metadata *identity.GetPluginMetadataResponse) (net.Listener, error) {
