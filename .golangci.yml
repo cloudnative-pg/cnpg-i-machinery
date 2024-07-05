@@ -23,6 +23,7 @@ linters:
     - funlen
     - gomnd
     - wsl
+    - paralleltest
 
 issues:
   exclude-rules:

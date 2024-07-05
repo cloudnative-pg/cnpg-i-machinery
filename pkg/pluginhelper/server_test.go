@@ -14,14 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pluginhelper
+package pluginhelper_test
 
 import (
 	"crypto/tls"
+	"fmt"
 	"os"
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
+
+	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/pluginhelper"
 )
 
 var _ = ginkgo.Describe("BuildTLSConfig", func() {
@@ -34,15 +37,16 @@ var _ = ginkgo.Describe("BuildTLSConfig", func() {
 	writeTempFile := func(data []byte) (string, error) {
 		file, err := os.CreateTemp("", "certfile")
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("failed to create temp file: %w", err)
 		}
 		defer func() {
 			_ = file.Close()
 		}()
 		_, err = file.Write(data)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("failed to write to temp file: %w", err)
 		}
+
 		return file.Name(), nil
 	}
 
@@ -70,11 +74,11 @@ var _ = ginkgo.Describe("BuildTLSConfig", func() {
 	})
 
 	ginkgo.It("should successfully create a TLS config", func(ctx ginkgo.SpecContext) {
-		tlsConfig, err := buildTLSConfig(ctx, serverCertPath, serverKeyPath, clientCertPath)
+		tlsConfig, err := pluginhelper.BuildTLSConfig(ctx, serverCertPath, serverKeyPath, clientCertPath)
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 		gomega.Expect(tlsConfig).ToNot(gomega.BeNil())
 		gomega.Expect(tlsConfig.Certificates).To(gomega.HaveLen(1))
-		gomega.Expect(tlsConfig.ClientCAs.Subjects()).ToNot(gomega.BeEmpty()) // nolint:staticcheck
+		gomega.Expect(tlsConfig.ClientCAs.Subjects()).ToNot(gomega.BeEmpty()) //nolint:staticcheck
 		gomega.Expect(tlsConfig.MinVersion).To(gomega.Equal(uint16(tls.VersionTLS13)))
 	})
 })

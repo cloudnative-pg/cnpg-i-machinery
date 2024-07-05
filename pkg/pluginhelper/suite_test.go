@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pluginhelper
+package pluginhelper_test
 
 import (
 	"crypto/ecdsa"
@@ -23,6 +23,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"fmt"
 	"math/big"
 	"testing"
 	"time"
@@ -43,7 +44,7 @@ type certs struct {
 func generateCerts(organization []string, serverCommonName string, clientCommonName string) (*certs, error) {
 	serverKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to generate server key: %w", err)
 	}
 
 	serverCertTemplate := &x509.Certificate{
@@ -67,13 +68,13 @@ func generateCerts(organization []string, serverCommonName string, clientCommonN
 		serverKey,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create server certificate: %w", err)
 	}
 
 	// Generate client key
 	clientKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to generate client key: %w", err)
 	}
 
 	// Generate client certificate
@@ -98,7 +99,7 @@ func generateCerts(organization []string, serverCommonName string, clientCommonN
 		serverKey,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create client certificate: %w", err)
 	}
 
 	// Encode server certificate and key to PEM
@@ -106,13 +107,13 @@ func generateCerts(organization []string, serverCommonName string, clientCommonN
 		Type:  "CERTIFICATE",
 		Bytes: serverCertDER,
 	})
-	pk, err := x509.MarshalECPrivateKey(serverKey)
+	serverPrivateKy, err := x509.MarshalECPrivateKey(serverKey)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to marshal server private key: %w", err)
 	}
 	serverKeyPEM := pem.EncodeToMemory(&pem.Block{
 		Type:  "EC PRIVATE KEY",
-		Bytes: pk,
+		Bytes: serverPrivateKy,
 	})
 
 	// Encode client certificate to PEM

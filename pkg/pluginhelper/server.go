@@ -26,6 +26,7 @@ import (
 	"os"
 	"os/signal"
 	"path"
+	"path/filepath"
 	"syscall"
 
 	"github.com/cloudnative-pg/cnpg-i/pkg/identity"
@@ -44,6 +45,12 @@ const (
 	tcpNetwork  = "tcp"
 
 	defaultPluginPath = "/plugins"
+)
+
+var (
+	errNoServerCert = errors.New("TCP server active, but no server-cert value passed")
+	errNoServerKey  = errors.New("TCP server active, but no server-key value passed")
+	errNoClientCert = errors.New("TCP server active, but no client-cert value passed")
 )
 
 // ServerEnricher is the type of functions that can add register
@@ -95,7 +102,7 @@ func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnri
 	cmd.Flags().String(
 		"server-key",
 		"",
-		"The key key to be used for the server process",
+		"The key to be used for the server process",
 	)
 	_ = viper.BindPFlag("server-key", cmd.Flags().Lookup("server-key"))
 
@@ -154,11 +161,16 @@ func run(ctx context.Context, identityImpl identity.IdentityServer, enrichers ..
 			recovery.StreamServerInterceptor(recovery.WithRecoveryHandlerContext(panicRecoveryHandler(listener))),
 		),
 	}
-	if certificatesOptions, err := setupTLSCerts(ctx); err != nil {
-		logger.Error(err, "While setting up TLS authentication")
-		return err
-	} else if certificatesOptions != nil {
+	if isTLSEnabled() {
+		certificatesOptions, err := setupTLSCerts(ctx)
+		if err != nil {
+			logger.Error(err, "While setting up TLS authentication")
+			return err
+		}
+
 		serverOptions = append(serverOptions, *certificatesOptions)
+	} else {
+		logger.Info("TCP server not active, skipping TLSCerts generation")
 	}
 
 	grpcServer := grpc.NewServer(serverOptions...)
@@ -184,6 +196,14 @@ func run(ctx context.Context, identityImpl identity.IdentityServer, enrichers ..
 	return nil
 }
 
+func isTLSEnabled() bool {
+	serverCertPath := viper.GetString("server-cert")
+	serverKeyPath := viper.GetString("server-key")
+	clientCertPath := viper.GetString("client-cert")
+
+	return serverCertPath != "" || serverKeyPath != "" || clientCertPath != ""
+}
+
 func setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) {
 	serverCertPath := viper.GetString("server-cert")
 	serverKeyPath := viper.GetString("server-key")
@@ -195,19 +215,16 @@ func setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) {
 		"clientCertPath", clientCertPath,
 	)
 
-	// There's no need to load the TLS stuff
-	// if the TCP server is not active
 	if serverCertPath == "" {
-		logger.Info("TCP server not active, skipping TLSCerts generation")
-		return nil, nil
+		return nil, errNoServerCert
 	}
 
 	if serverKeyPath == "" {
-		return nil, errors.New("TCP server active, but no server-key value passed")
+		return nil, errNoServerKey
 	}
 
 	if clientCertPath == "" {
-		return nil, errors.New("TCP server active, but no client-cert value passed")
+		return nil, errNoClientCert
 	}
 
 	tlsConfig, err := buildTLSConfig(ctx, serverCertPath, serverKeyPath, clientCertPath)
@@ -217,6 +234,7 @@ func setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) {
 
 	logger.Info("Set up TLS authentication")
 	result := grpc.Creds(credentials.NewTLS(tlsConfig))
+
 	return &result, nil
 }
 
@@ -235,27 +253,26 @@ func buildTLSConfig(
 	cert, err := tls.LoadX509KeyPair(serverCertPath, serverKeyPath)
 	if err != nil {
 		logger.Error(err, "failed to load server key pair")
-		return nil, err
+		return nil, fmt.Errorf("failed to load server key pair: %w", err)
 	}
 
-	ca := x509.NewCertPool()
-	caBytes, err := os.ReadFile(clientCertPath) // nolint: gosec
+	caCertPool := x509.NewCertPool()
+	caBytes, err := os.ReadFile(filepath.Clean(clientCertPath))
 	if err != nil {
 		logger.Error(err, "failed to read client public key")
-		return nil, err
+		return nil, fmt.Errorf("failed to read client public key: %w", err)
 	}
-	if ok := ca.AppendCertsFromPEM(caBytes); !ok {
+	if ok := caCertPool.AppendCertsFromPEM(caBytes); !ok {
 		logger.Error(err, "failed to parse client public key")
-		return nil, err
+		return nil, fmt.Errorf("failed to parse client public key: %w", err)
 	}
 
-	tlsConfig := &tls.Config{
+	return &tls.Config{
 		ClientAuth:   tls.RequireAndVerifyClientCert,
 		Certificates: []tls.Certificate{cert},
-		ClientCAs:    ca,
+		ClientCAs:    caCertPool,
 		MinVersion:   tls.VersionTLS13,
-	}
-	return tlsConfig, nil
+	}, nil
 }
 
 func createListener(ctx context.Context, metadata *identity.GetPluginMetadataResponse) (net.Listener, error) {
@@ -278,12 +295,17 @@ func createTCPListener(ctx context.Context) (net.Listener, error) {
 		"serverAddress", serverAddress,
 	)
 
-	// Start accepting connections on the socket
+	// Start accepting connections on the server address
 	listener, err := net.Listen(
 		tcpNetwork,
 		serverAddress,
 	)
-	return listener, err
+	if err != nil {
+		logger.Error(err, "While starting server")
+		return nil, fmt.Errorf("cannot listen on `%s`: %w", serverAddress, err)
+	}
+
+	return listener, nil
 }
 
 func createUnixDomainSocketListener(
@@ -296,7 +318,7 @@ func createUnixDomainSocketListener(
 	if len(pluginPath) == 0 {
 		pluginPath = defaultPluginPath
 	}
-	socketName := path.Join(pluginPath, metadata.Name)
+	socketName := path.Join(pluginPath, metadata.GetName())
 
 	// Remove stale unix socket it still existent
 	if err := removeStaleSocket(ctx, socketName); err != nil {
@@ -315,7 +337,12 @@ func createUnixDomainSocketListener(
 		unixNetwork,
 		socketName,
 	)
-	return listener, err
+	if err != nil {
+		logger.Error(err, "While starting server")
+		return nil, fmt.Errorf("cannot listen on `%s`: %w", socketName, err)
+	}
+
+	return listener, nil
 }
 
 // removeStaleSocket removes a stale unix domain socket.
