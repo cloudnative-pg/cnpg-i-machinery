@@ -22,6 +22,8 @@ linters:
     - exhaustruct
     - funlen
     - gomnd
+    - paralleltest
+    - testpackage
     - wsl
 
 issues:
