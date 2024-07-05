@@ -21,13 +21,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/onsi/ginkgo/v2"
-	"github.com/onsi/gomega"
-
 	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/pluginhelper"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
-var _ = ginkgo.Describe("BuildTLSConfig", func() {
+var _ = Describe("BuildTLSConfig", func() {
 	var (
 		serverCertPath string
 		serverKeyPath  string
@@ -50,35 +50,35 @@ var _ = ginkgo.Describe("BuildTLSConfig", func() {
 		return file.Name(), nil
 	}
 
-	ginkgo.BeforeEach(func() {
+	BeforeEach(func() {
 		certs, err := generateCerts([]string{"Test Organization"},
 			"localhost",
 			"client",
 		)
-		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		Expect(err).ToNot(HaveOccurred())
 
 		serverCertPath, err = writeTempFile(certs.serverCertPEM)
-		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		Expect(err).ToNot(HaveOccurred())
 
 		serverKeyPath, err = writeTempFile(certs.serverKeyPEM)
-		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		Expect(err).ToNot(HaveOccurred())
 
 		clientCertPath, err = writeTempFile(certs.clientCertPEM)
-		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		Expect(err).ToNot(HaveOccurred())
 	})
 
-	ginkgo.AfterEach(func() {
-		gomega.Expect(os.Remove(serverCertPath)).ToNot(gomega.HaveOccurred())
-		gomega.Expect(os.Remove(serverKeyPath)).ToNot(gomega.HaveOccurred())
-		gomega.Expect(os.Remove(clientCertPath)).ToNot(gomega.HaveOccurred())
+	AfterEach(func() {
+		Expect(os.Remove(serverCertPath)).ToNot(HaveOccurred())
+		Expect(os.Remove(serverKeyPath)).ToNot(HaveOccurred())
+		Expect(os.Remove(clientCertPath)).ToNot(HaveOccurred())
 	})
 
-	ginkgo.It("should successfully create a TLS config", func(ctx ginkgo.SpecContext) {
+	It("should successfully create a TLS config", func(ctx SpecContext) {
 		tlsConfig, err := pluginhelper.BuildTLSConfig(ctx, serverCertPath, serverKeyPath, clientCertPath)
-		gomega.Expect(err).ToNot(gomega.HaveOccurred())
-		gomega.Expect(tlsConfig).ToNot(gomega.BeNil())
-		gomega.Expect(tlsConfig.Certificates).To(gomega.HaveLen(1))
-		gomega.Expect(tlsConfig.ClientCAs.Subjects()).ToNot(gomega.BeEmpty()) //nolint:staticcheck
-		gomega.Expect(tlsConfig.MinVersion).To(gomega.Equal(uint16(tls.VersionTLS13)))
+		Expect(err).ToNot(HaveOccurred())
+		Expect(tlsConfig).ToNot(BeNil())
+		Expect(tlsConfig.Certificates).To(HaveLen(1))
+		Expect(tlsConfig.ClientCAs.Subjects()).ToNot(BeEmpty()) //nolint:staticcheck
+		Expect(tlsConfig.MinVersion).To(Equal(uint16(tls.VersionTLS13)))
 	})
 })
