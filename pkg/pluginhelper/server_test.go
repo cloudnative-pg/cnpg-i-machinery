@@ -14,14 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pluginhelper_test
+package pluginhelper
 
 import (
 	"crypto/tls"
 	"fmt"
 	"os"
-
-	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/pluginhelper"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -74,7 +72,7 @@ var _ = Describe("BuildTLSConfig", func() {
 	})
 
 	It("should successfully create a TLS config", func(ctx SpecContext) {
-		tlsConfig, err := pluginhelper.BuildTLSConfig(ctx, serverCertPath, serverKeyPath, clientCertPath)
+		tlsConfig, err := buildTLSConfig(ctx, serverCertPath, serverKeyPath, clientCertPath)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(tlsConfig).ToNot(BeNil())
 		Expect(tlsConfig.Certificates).To(HaveLen(1))

@@ -22,8 +22,9 @@ linters:
     - exhaustruct
     - funlen
     - gomnd
-    - wsl
     - paralleltest
+    - testpackage
+    - wsl
 
 issues:
   exclude-rules:
