@@ -155,9 +155,11 @@ func run(ctx context.Context, identityImpl identity.IdentityServer, enrichers ..
 	// Create GRPC server
 	serverOptions := []grpc.ServerOption{
 		grpc.ChainUnaryInterceptor(
+			loggingUnaryServerInterceptor(logger),
 			recovery.UnaryServerInterceptor(recovery.WithRecoveryHandlerContext(panicRecoveryHandler(listener))),
 		),
 		grpc.ChainStreamInterceptor(
+			loggingStreamServerInterceptor(logger),
 			recovery.StreamServerInterceptor(recovery.WithRecoveryHandlerContext(panicRecoveryHandler(listener))),
 		),
 	}
