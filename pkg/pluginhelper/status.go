@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/cloudnative-pg/cnpg-i/pkg/operator"
 )
 
