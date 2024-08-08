@@ -155,12 +155,14 @@ func run(ctx context.Context, identityImpl identity.IdentityServer, enrichers ..
 	// Create GRPC server
 	serverOptions := []grpc.ServerOption{
 		grpc.ChainUnaryInterceptor(
+			logFailedRequestsUnaryServerInterceptor(logger),
 			loggingUnaryServerInterceptor(logger),
-			recovery.UnaryServerInterceptor(recovery.WithRecoveryHandlerContext(panicRecoveryHandler(listener))),
+			recovery.UnaryServerInterceptor(),
 		),
 		grpc.ChainStreamInterceptor(
+			logFailedRequestsStreamServerInterceptor(logger),
 			loggingStreamServerInterceptor(logger),
-			recovery.StreamServerInterceptor(recovery.WithRecoveryHandlerContext(panicRecoveryHandler(listener))),
+			recovery.StreamServerInterceptor(),
 		),
 	}
 	if isTLSEnabled() {
@@ -389,19 +391,4 @@ func handleSignals(ctx context.Context, listener net.Listener) {
 
 		os.Exit(1)
 	}(sigc)
-}
-
-func panicRecoveryHandler(listener net.Listener) recovery.RecoveryHandlerFuncContext {
-	return func(ctx context.Context, err any) error {
-		logger := logging.FromContext(ctx)
-		logger.Info("Panic occurred", "error", err)
-
-		if closeError := listener.Close(); closeError != nil {
-			logger.Error(closeError, "While stopping server")
-		}
-
-		os.Exit(1)
-
-		return nil
-	}
 }
