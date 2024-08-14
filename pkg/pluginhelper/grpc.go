@@ -25,7 +25,7 @@ import (
 	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
 )
 
-// Inject the passed logger into the gRPC call context for all inbound unary calls.
+// loggingUnaryServerInterceptor injects the passed logger into the gRPC call context for all inbound unary calls.
 //
 // Works around go-grpc's lack of a WithContext option to set a root context.
 func loggingUnaryServerInterceptor(logger logr.Logger) grpc.UnaryServerInterceptor {
@@ -40,7 +40,7 @@ func loggingUnaryServerInterceptor(logger logr.Logger) grpc.UnaryServerIntercept
 	}
 }
 
-// Logs failed requests
+// logFailedRequestsUnaryServerInterceptor logs failed requests.
 func logFailedRequestsUnaryServerInterceptor(logger logr.Logger) grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
@@ -56,6 +56,7 @@ func logFailedRequestsUnaryServerInterceptor(logger logr.Logger) grpc.UnaryServe
 				"info", info,
 			)
 		}
+
 		return result, err
 	}
 }
@@ -66,7 +67,7 @@ type logInjectStream struct {
 	logger logr.Logger
 }
 
-// Inject the passed logger into the gRPC call context for all inbound streaming calls.
+// Context injects the passed logger into the gRPC call context for all inbound streaming calls.
 func (s *logInjectStream) Context() context.Context {
 	return logging.IntoContext(s.ServerStream.Context(), s.logger)
 }
@@ -81,7 +82,7 @@ func loggingStreamServerInterceptor(logger logr.Logger) grpc.StreamServerInterce
 	}
 }
 
-// Logs failed requests
+// logFailedRequestsStreamServerInterceptor logs failed requests.
 func logFailedRequestsStreamServerInterceptor(logger logr.Logger) grpc.StreamServerInterceptor {
 	return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		err := handler(srv, ss)
@@ -92,6 +93,7 @@ func logFailedRequestsStreamServerInterceptor(logger logr.Logger) grpc.StreamSer
 				"info", info,
 			)
 		}
+
 		return err
 	}
 }
