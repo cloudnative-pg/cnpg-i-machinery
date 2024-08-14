@@ -25,7 +25,7 @@ import (
 	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
 )
 
-// Inject the passed logger into the gRPC call context for all inbound unary calls.
+// loggingUnaryServerInterceptor injects the passed logger into the gRPC call context for all inbound unary calls.
 //
 // Works around go-grpc's lack of a WithContext option to set a root context.
 func loggingUnaryServerInterceptor(logger logr.Logger) grpc.UnaryServerInterceptor {
@@ -40,13 +40,34 @@ func loggingUnaryServerInterceptor(logger logr.Logger) grpc.UnaryServerIntercept
 	}
 }
 
+// logFailedRequestsUnaryServerInterceptor logs failed requests.
+func logFailedRequestsUnaryServerInterceptor(logger logr.Logger) grpc.UnaryServerInterceptor {
+	return func(
+		ctx context.Context,
+		req interface{},
+		info *grpc.UnaryServerInfo,
+		handler grpc.UnaryHandler,
+	) (interface{}, error) {
+		result, err := handler(ctx, req)
+		if err != nil {
+			logger.Error(
+				err,
+				"Error while handling GRPC request",
+				"info", info,
+			)
+		}
+
+		return result, err
+	}
+}
+
 // logInjectStream wraps a grpc.ServerStream and injects a logger into the context.
 type logInjectStream struct {
 	grpc.ServerStream
 	logger logr.Logger
 }
 
-// Inject the passed logger into the gRPC call context for all inbound streaming calls.
+// Context injects the passed logger into the gRPC call context for all inbound streaming calls.
 func (s *logInjectStream) Context() context.Context {
 	return logging.IntoContext(s.ServerStream.Context(), s.logger)
 }
@@ -58,5 +79,21 @@ func (s *logInjectStream) Context() context.Context {
 func loggingStreamServerInterceptor(logger logr.Logger) grpc.StreamServerInterceptor {
 	return func(srv any, ss grpc.ServerStream, _ *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		return handler(srv, &logInjectStream{ss, logger})
+	}
+}
+
+// logFailedRequestsStreamServerInterceptor logs failed requests.
+func logFailedRequestsStreamServerInterceptor(logger logr.Logger) grpc.StreamServerInterceptor {
+	return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+		err := handler(srv, ss)
+		if err != nil {
+			logger.Error(
+				err,
+				"Error while handling GRPC request",
+				"info", info,
+			)
+		}
+
+		return err
 	}
 }
