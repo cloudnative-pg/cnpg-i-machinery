@@ -17,9 +17,11 @@ limitations under the License.
 package validation
 
 import (
-	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/pluginhelper/common"
-	"github.com/cloudnative-pg/cnpg-i/pkg/operator"
 	"strconv"
+
+	"github.com/cloudnative-pg/cnpg-i/pkg/operator"
+
+	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/pluginhelper/common"
 )
 
 // BuildErrorForParameter creates a validation error for a certain plugin

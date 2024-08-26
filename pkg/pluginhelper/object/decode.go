@@ -3,10 +3,10 @@ package object
 import (
 	"encoding/json"
 	"fmt"
-	corev1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	apiv1 "github.com/cloudnative-pg/cloudnative-pg/api/v1"
+	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // DecodeClusterJSON decodes a JSON representation of a cluster.
@@ -34,5 +34,6 @@ func DecodeObject[T client.Object](objectJSON []byte, obj T) error {
 	if err := json.Unmarshal(objectJSON, &obj); err != nil {
 		return fmt.Errorf("error unmarshalling object JSON: %w", err)
 	}
+
 	return nil
 }

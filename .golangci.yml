@@ -25,6 +25,7 @@ linters:
     - paralleltest
     - testpackage
     - wsl
+    - wrapcheck
 
 issues:
   exclude-rules:

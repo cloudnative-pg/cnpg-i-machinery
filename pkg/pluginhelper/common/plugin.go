@@ -20,6 +20,7 @@ import (
 	apiv1 "github.com/cloudnative-pg/cloudnative-pg/api/v1"
 )
 
+// Plugin represents a plugin with its associated cluster and parameters.
 type Plugin struct {
 	Cluster *apiv1.Cluster
 	// Parameters are the configuration parameters of this plugin
@@ -27,6 +28,7 @@ type Plugin struct {
 	PluginIndex int
 }
 
+// NewPlugin creates a new Plugin instance for the given cluster and plugin name.
 func NewPlugin(cluster apiv1.Cluster, pluginName string) *Plugin {
 	result := &Plugin{Cluster: &cluster}
 

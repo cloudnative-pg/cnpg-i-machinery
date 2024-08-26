@@ -17,10 +17,10 @@ limitations under the License.
 package common
 
 import (
+	apiv1 "github.com/cloudnative-pg/cloudnative-pg/api/v1"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	apiv1 "github.com/cloudnative-pg/cloudnative-pg/api/v1"
 )
 
 var _ = Describe("NewPlugin", func() {

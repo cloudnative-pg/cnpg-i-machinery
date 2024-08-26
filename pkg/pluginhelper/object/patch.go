@@ -21,10 +21,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// CreatePatch creates a JSON patch from the diff between the old and new object.
 func CreatePatch(oldObject, newObject client.Object) ([]byte, error) {
 	ptc, err := jsonpatch.CreateJSONPatch(oldObject, newObject)
 	if err != nil {
 		return nil, err
 	}
-	return []byte(ptc.String()), err
+
+	return []byte(ptc.String()), nil
 }
