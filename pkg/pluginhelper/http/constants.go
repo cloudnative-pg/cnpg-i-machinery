@@ -18,5 +18,5 @@ package http
 
 import "errors"
 
-// ErrNilObject is used when a nill object is passed to the builder.
+// ErrNilObject is used when a nil object is passed to the builder.
 var ErrNilObject = errors.New("nil object passed, use NoOpResponse")

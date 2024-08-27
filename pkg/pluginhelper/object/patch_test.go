@@ -24,72 +24,70 @@ import (
 )
 
 var _ = Describe("CreatePatch", func() {
-	Context("CreatePatch", func() {
-		It("should create a patch for different objects", func() {
-			oldObject := &corev1.Pod{
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{Name: "nginx", Image: "nginx:1.14.2"},
-					},
+	It("should create a patch for different objects", func() {
+		oldObject := &corev1.Pod{
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{Name: "nginx", Image: "nginx:1.14.2"},
 				},
-			}
-			newObject := &corev1.Pod{
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{Name: "nginx", Image: "nginx:1.16.0"},
-					},
+			},
+		}
+		newObject := &corev1.Pod{
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{Name: "nginx", Image: "nginx:1.16.0"},
 				},
-			}
-			patch, err := CreatePatch(oldObject, newObject)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(patch).NotTo(BeNil())
-			Expect(string(patch)).To(ContainSubstring(`"op":"replace"`))
-		})
+			},
+		}
+		patch, err := CreatePatch(oldObject, newObject)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(patch).NotTo(BeNil())
+		Expect(string(patch)).To(ContainSubstring(`"op":"replace"`))
+	})
 
-		It("should return an empty patch for identical objects", func() {
-			oldObject := &corev1.Pod{
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{Name: "nginx", Image: "nginx:1.14.2"},
-					},
+	It("should return an empty patch for identical objects", func() {
+		oldObject := &corev1.Pod{
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{Name: "nginx", Image: "nginx:1.14.2"},
 				},
-			}
-			newObject := &corev1.Pod{
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{Name: "nginx", Image: "nginx:1.14.2"},
-					},
+			},
+		}
+		newObject := &corev1.Pod{
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{Name: "nginx", Image: "nginx:1.14.2"},
 				},
-			}
-			patch, err := CreatePatch(oldObject, newObject)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(patch).To(BeEmpty())
-		})
+			},
+		}
+		patch, err := CreatePatch(oldObject, newObject)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(patch).To(BeEmpty())
+	})
 
-		It("should return an error for nil oldObject", func() {
-			newObject := &corev1.Pod{
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{Name: "nginx", Image: "nginx:1.16.0"},
-					},
+	It("should return an error for nil oldObject", func() {
+		newObject := &corev1.Pod{
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{Name: "nginx", Image: "nginx:1.16.0"},
 				},
-			}
-			patch, err := CreatePatch(nil, newObject)
-			Expect(err).To(HaveOccurred())
-			Expect(patch).To(BeNil())
-		})
+			},
+		}
+		patch, err := CreatePatch(nil, newObject)
+		Expect(err).To(HaveOccurred())
+		Expect(patch).To(BeNil())
+	})
 
-		It("should return an error for nil newObject", func() {
-			oldObject := &corev1.Pod{
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{Name: "nginx", Image: "nginx:1.14.2"},
-					},
+	It("should return an error for nil newObject", func() {
+		oldObject := &corev1.Pod{
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{Name: "nginx", Image: "nginx:1.14.2"},
 				},
-			}
-			patch, err := CreatePatch(oldObject, nil)
-			Expect(err).To(HaveOccurred())
-			Expect(patch).To(BeNil())
-		})
+			},
+		}
+		patch, err := CreatePatch(oldObject, nil)
+		Expect(err).To(HaveOccurred())
+		Expect(patch).To(BeNil())
 	})
 })
