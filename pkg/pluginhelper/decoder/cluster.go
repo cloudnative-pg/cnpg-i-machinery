@@ -14,23 +14,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package backup provides a set of functions to work with the backup plugins
-package backup
+package decoder
 
 import (
-	"encoding/json"
-	"fmt"
-
 	apiv1 "github.com/cloudnative-pg/cloudnative-pg/api/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-// DecodeBackup decodes a JSON representation of a backup.
-func DecodeBackup(backupDefinition []byte) (*apiv1.Backup, error) {
-	var backup apiv1.Backup
+func getClusterGVK() schema.GroupVersionKind {
+	return schema.GroupVersionKind{
+		Group:   apiv1.GroupVersion.Group,
+		Version: apiv1.GroupVersion.Version,
+		Kind:    apiv1.ClusterKind,
+	}
+}
 
-	if err := json.Unmarshal(backupDefinition, &backup); err != nil {
-		return nil, fmt.Errorf("error unmarshalling backup JSON: %w", err)
+// DecodeClusterJSON decodes a JSON representation of a cluster.
+func DecodeClusterJSON(clusterJSON []byte) (*apiv1.Cluster, error) {
+	var result apiv1.Cluster
+
+	if err := DecodeObject(clusterJSON, &result, getClusterGVK()); err != nil {
+		return nil, err
 	}
 
-	return &backup, nil
+	return &result, nil
 }

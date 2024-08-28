@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package backup
+package decoder
 
 import (
 	. "github.com/onsi/ginkgo/v2"
@@ -22,24 +22,44 @@ import (
 )
 
 var _ = Describe("DecodeBackup", func() {
-	Context("when the backup JSON is valid", func() {
-		It("should decode the backup JSON successfully", func() {
-			backupJSON := []byte(`{"apiVersion":"v1","kind":"Backup"}`)
+	DescribeTable(
+		"DecodeBackup",
+		func(backupJSON []byte, succeeds bool) {
 			backup, err := DecodeBackup(backupJSON)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(backup).NotTo(BeNil())
-			Expect(backup.Kind).To(Equal("Backup"))
-		})
-	})
+			if err != nil {
+				Expect(succeeds).To(BeFalse())
+				return
+			}
 
-	Context("when the backup JSON is invalid", func() {
-		It("should return an error for invalid JSON", func() {
-			backupJSON := []byte(`{"apiVersion":"v1","kind":}`)
-			backup, err := DecodeBackup(backupJSON)
-			Expect(err).To(HaveOccurred())
-			Expect(backup).To(BeNil())
-		})
-	})
+			Expect(succeeds).To(BeTrue())
+			Expect(backup.GetObjectKind().GroupVersionKind()).To(Equal(getBackupGVK()))
+		},
+		Entry(
+			"when the backup JSON is valid",
+			[]byte(`{"apiVersion":"postgresql.cnpg.io/v1","kind":"Backup"}`),
+			true,
+		),
+		Entry(
+			"when the backup JSON is valid but the Kind is wrong",
+			[]byte(`{"apiVersion":"postgresql.cnpg.io/v1","kind":"Pooler"}`),
+			false,
+		),
+		Entry(
+			"when the backup JSON is valid but the object type is wrong",
+			[]byte(`{"apiVersion":"apps/v1","kind":"Backup"}`),
+			false,
+		),
+		Entry(
+			"when the backup JSON is invalid",
+			[]byte(`{"apiVersion":"v1","kind":}`),
+			false,
+		),
+		Entry(
+			"when the backup JSON is empty",
+			[]byte(``),
+			false,
+		),
+	)
 
 	Context("when the backup JSON is empty", func() {
 		It("should return an error for empty JSON", func() {

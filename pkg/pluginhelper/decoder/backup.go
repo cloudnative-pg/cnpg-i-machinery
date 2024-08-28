@@ -14,16 +14,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package backup
+package decoder
 
 import (
-	"testing"
-
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
+	apiv1 "github.com/cloudnative-pg/cloudnative-pg/api/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-func TestBackup(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Backup Suite")
+func getBackupGVK() schema.GroupVersionKind {
+	return schema.GroupVersionKind{
+		Group:   apiv1.GroupVersion.Group,
+		Version: apiv1.GroupVersion.Version,
+		Kind:    apiv1.BackupKind,
+	}
+}
+
+// DecodeBackup decodes a JSON representation of a backup.
+func DecodeBackup(backupDefinition []byte) (*apiv1.Backup, error) {
+	var backup apiv1.Backup
+
+	if err := DecodeObject(backupDefinition, &backup, getBackupGVK()); err != nil {
+		return nil, err
+	}
+
+	return &backup, nil
 }

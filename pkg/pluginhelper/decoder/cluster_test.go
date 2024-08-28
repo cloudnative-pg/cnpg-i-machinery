@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package object
+package decoder
 
 import (
 	. "github.com/onsi/ginkgo/v2"
@@ -23,18 +23,31 @@ import (
 
 var _ = Describe("Decode Functions", func() {
 	DescribeTable(
-		"GetKind",
-		func(definition []byte, expectedKind string, succeeds bool) {
-			kind, err := GetKind(definition)
+		"Decode Functions",
+		func(clusterJSON []byte, succeeds bool) {
+			cluster, err := DecodeClusterJSON(clusterJSON)
 			if !succeeds {
 				Expect(err).To(HaveOccurred())
 				return
 			}
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(kind).To(Equal(expectedKind))
+			Expect(cluster).NotTo(BeNil())
+			Expect(cluster.GroupVersionKind()).To(Equal(getClusterGVK()))
 		},
-		Entry("should get kind from valid JSON", []byte(`{"kind":"Pod"}`), "Pod", true),
-		Entry("should return error for invalid JSON", []byte(`{"kind":}`), "", false),
+		Entry(
+			"should decode valid cluster JSON",
+			[]byte(`{"apiVersion":"postgresql.cnpg.io/v1","kind":"Cluster"}`),
+			true,
+		),
+		Entry(
+			"should return error for invalid cluster JSON",
+			[]byte(`{"apiVersion":"v1","kind":}`),
+			false,
+		),
+		Entry(
+			"should fail when the JSON is valid but doesn't represent a Cluster",
+			[]byte(`{"apiVersion":"postgresql.cnpg.io/v1","kind":"Backup"}`),
+			false,
+		),
 	)
 })

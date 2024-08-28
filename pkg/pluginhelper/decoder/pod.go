@@ -14,21 +14,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package object
+package decoder
 
 import (
-	"fmt"
-
-	"github.com/snorwin/jsonpatch"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-// CreatePatch creates a JSON patch from the diff between the old and new object.
-func CreatePatch(oldObject, newObject client.Object) ([]byte, error) {
-	ptc, err := jsonpatch.CreateJSONPatch(oldObject, newObject)
-	if err != nil {
-		return nil, fmt.Errorf("while creating JSON patch: %w", err)
+func getPodGVK() schema.GroupVersionKind {
+	return schema.GroupVersionKind{
+		Group:   corev1.SchemeGroupVersion.Group,
+		Version: corev1.SchemeGroupVersion.Version,
+		Kind:    "Pod",
+	}
+}
+
+// DecodePodJSON decodes a JSON representation of a pod.
+func DecodePodJSON(podJSON []byte) (*corev1.Pod, error) {
+	var result corev1.Pod
+
+	if err := DecodeObject(podJSON, &result, getPodGVK()); err != nil {
+		return nil, err
 	}
 
-	return []byte(ptc.String()), nil
+	return &result, nil
 }

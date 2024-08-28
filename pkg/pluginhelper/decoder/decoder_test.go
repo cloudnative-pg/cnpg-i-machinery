@@ -14,27 +14,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package object
+package decoder
 
 import (
+	corev1 "k8s.io/api/core/v1"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Decode Functions", func() {
+var _ = Describe("Generic decoder", func() {
 	DescribeTable(
-		"GetKind",
-		func(definition []byte, expectedKind string, succeeds bool) {
-			kind, err := GetKind(definition)
+		"Generic decoder",
+		func(objectJSON []byte, succeeds bool) {
+			var pod corev1.Pod
+			err := DecodeObject(objectJSON, &pod, getPodGVK())
 			if !succeeds {
 				Expect(err).To(HaveOccurred())
 				return
 			}
 
 			Expect(err).NotTo(HaveOccurred())
-			Expect(kind).To(Equal(expectedKind))
+			Expect(pod.GetObjectKind().GroupVersionKind()).To(Equal(getPodGVK()))
 		},
-		Entry("should get kind from valid JSON", []byte(`{"kind":"Pod"}`), "Pod", true),
-		Entry("should return error for invalid JSON", []byte(`{"kind":}`), "", false),
+		Entry("should decode valid object JSON", []byte(`{"apiVersion":"v1","kind":"Pod"}`), true),
+		Entry("should return error for an invalid object type", []byte(`{"apiVersion":"invalid/v1","kind":"Pod"}`), false),
+		Entry("should return error for invalid object JSON", []byte(`{"apiVersion":"v1","kind":}`), false),
 	)
 })

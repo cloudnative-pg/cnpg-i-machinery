@@ -14,21 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package object
+package decoder
 
 import (
-	"fmt"
+	"testing"
 
-	"github.com/snorwin/jsonpatch"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
-// CreatePatch creates a JSON patch from the diff between the old and new object.
-func CreatePatch(oldObject, newObject client.Object) ([]byte, error) {
-	ptc, err := jsonpatch.CreateJSONPatch(oldObject, newObject)
-	if err != nil {
-		return nil, fmt.Errorf("while creating JSON patch: %w", err)
-	}
-
-	return []byte(ptc.String()), nil
+func TestDecoder(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "JSON Decoder Test Suite")
 }

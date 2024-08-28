@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package object
+package decoder
 
 import (
 	. "github.com/onsi/ginkgo/v2"
@@ -23,18 +23,31 @@ import (
 
 var _ = Describe("Decode Functions", func() {
 	DescribeTable(
-		"GetKind",
-		func(definition []byte, expectedKind string, succeeds bool) {
-			kind, err := GetKind(definition)
+		"DecodePodJSON",
+		func(podJSON []byte, succeeds bool) {
+			pod, err := DecodePodJSON(podJSON)
 			if !succeeds {
 				Expect(err).To(HaveOccurred())
 				return
 			}
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(kind).To(Equal(expectedKind))
+			Expect(pod).ToNot(BeNil())
+			Expect(pod.GroupVersionKind()).To(Equal(getPodGVK()))
 		},
-		Entry("should get kind from valid JSON", []byte(`{"kind":"Pod"}`), "Pod", true),
-		Entry("should return error for invalid JSON", []byte(`{"kind":}`), "", false),
+		Entry(
+			"should decode valid pod JSON",
+			[]byte(`{"apiVersion":"v1","kind":"Pod"}`),
+			true,
+		),
+		Entry(
+			"should return error for invalid pod JSON",
+			[]byte(`{"apiVersion":"v1","kind":}`),
+			false,
+		),
+		Entry(
+			"should return error for invalid pod JSON",
+			[]byte(`{"apiVersion":"v1","kind":"Node"}`),
+			false,
+		),
 	)
 })

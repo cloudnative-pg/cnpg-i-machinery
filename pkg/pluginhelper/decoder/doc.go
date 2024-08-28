@@ -14,9 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package http
-
-import "errors"
-
-// ErrNilObject is used when a nil object is passed to the builder.
-var ErrNilObject = errors.New("nil object passed, use NoOpResponse")
+// Package decoder contains the functions that decode a JSON
+// stream into a structured Kubernetes resource
+package decoder
