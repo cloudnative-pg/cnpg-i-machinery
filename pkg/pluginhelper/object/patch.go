@@ -24,8 +24,8 @@ import (
 )
 
 // CreatePatch creates a JSON patch from the diff between the old and new object.
-func CreatePatch(oldObject, newObject client.Object) ([]byte, error) {
-	ptc, err := jsonpatch.CreateJSONPatch(oldObject, newObject)
+func CreatePatch(newObject, oldObject client.Object) ([]byte, error) {
+	ptc, err := jsonpatch.CreateJSONPatch(newObject, oldObject)
 	if err != nil {
 		return nil, fmt.Errorf("while creating JSON patch: %w", err)
 	}
