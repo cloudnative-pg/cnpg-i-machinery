@@ -30,7 +30,7 @@ var _ = Describe("BuildSetStatusResponse", func() {
 		jsonBody := test{Name: "test"}
 		b, err := NewSetClusterStatusResponseBuilder().JSONStatusResponse(&jsonBody)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(b.GetJsonStatus()).ToNot(BeEmpty())
+		Expect(b.GetJsonStatus()).To(Equal([]byte(`{"string":"test"}`)))
 	})
 
 	It("should properly form a response for a 'nil' value, allowing the plugins to do a 'noop'", func() {
