@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pluginhelper
+package http
 
 import (
 	"context"
@@ -138,10 +138,6 @@ func run(ctx context.Context, identityImpl identity.IdentityServer, enrichers ..
 		return fmt.Errorf("error while querying the identity service: %w", err)
 	}
 
-	pluginName := identityResponse.GetName()
-	pluginDisplayName := identityResponse.GetDisplayName()
-	pluginVersion := identityResponse.GetVersion()
-
 	// Start accepting connections on the socket
 	listener, err := createListener(ctx, identityResponse)
 	if err != nil {
@@ -186,6 +182,10 @@ func run(ctx context.Context, identityImpl identity.IdentityServer, enrichers ..
 			return enrichErr
 		}
 	}
+
+	pluginName := identityResponse.GetName()
+	pluginDisplayName := identityResponse.GetDisplayName()
+	pluginVersion := identityResponse.GetVersion()
 
 	logger.Info(
 		"Starting plugin",

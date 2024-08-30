@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pluginhelper
+package http
 
 import (
 	"crypto/tls"
@@ -76,7 +76,7 @@ var _ = Describe("BuildTLSConfig", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(tlsConfig).ToNot(BeNil())
 		Expect(tlsConfig.Certificates).To(HaveLen(1))
-		Expect(tlsConfig.ClientCAs.Subjects()).ToNot(BeEmpty())
+		Expect(tlsConfig.ClientCAs.Subjects()).ToNot(BeEmpty()) //nolint: staticcheck
 		Expect(tlsConfig.MinVersion).To(Equal(uint16(tls.VersionTLS13)))
 	})
 })

@@ -1,15 +1,27 @@
-package pluginhelper
+/*
+Copyright The CloudNativePG Contributors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package clusterstatus
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/cloudnative-pg/cnpg-i/pkg/operator"
 )
-
-// ErrNilObject is used when a nill object is passed to the builder.
-var ErrNilObject = errors.New("nil object passed, use NoOpResponse")
 
 // NotAnObjectError is used when the passed value cannot be represented
 // as a JSON object.
@@ -24,21 +36,21 @@ func (err NotAnObjectError) Error() string {
 	)
 }
 
-// SetStatusResponseBuilder a SetStatus response builder.
-type SetStatusResponseBuilder struct{}
+// SetClusterStatusResponseBuilder a SetStatus response builder.
+type SetClusterStatusResponseBuilder struct{}
 
-// NewSetStatusResponseBuilder is an helper that creates the SetStatus endpoint responses.
-func NewSetStatusResponseBuilder() *SetStatusResponseBuilder {
-	return &SetStatusResponseBuilder{}
+// NewSetClusterStatusResponseBuilder is an helper that creates the SetStatus endpoint responses.
+func NewSetClusterStatusResponseBuilder() *SetClusterStatusResponseBuilder {
+	return &SetClusterStatusResponseBuilder{}
 }
 
 // NoOpResponse this response will ensure that no changes will be done to the plugin status.
-func (s SetStatusResponseBuilder) NoOpResponse() *operator.SetClusterStatusResponse {
+func (s SetClusterStatusResponseBuilder) NoOpResponse() *operator.SetClusterStatusResponse {
 	return &operator.SetClusterStatusResponse{JsonStatus: nil}
 }
 
 // SetEmptyStatusResponse will set the plugin status to an empty object '{}'.
-func (s SetStatusResponseBuilder) SetEmptyStatusResponse() *operator.SetClusterStatusResponse {
+func (s SetClusterStatusResponseBuilder) SetEmptyStatusResponse() *operator.SetClusterStatusResponse {
 	b, err := json.Marshal(map[string]string{})
 	if err != nil {
 		panic("JSON mashaller failed for empty map")
@@ -49,7 +61,7 @@ func (s SetStatusResponseBuilder) SetEmptyStatusResponse() *operator.SetClusterS
 
 // JSONStatusResponse requires a struct or map that can be translated to a JSON object,
 // will set the status to the passed object.
-func (s SetStatusResponseBuilder) JSONStatusResponse(obj any) (*operator.SetClusterStatusResponse, error) {
+func (s SetClusterStatusResponseBuilder) JSONStatusResponse(obj any) (*operator.SetClusterStatusResponse, error) {
 	if obj == nil {
 		return nil, ErrNilObject
 	}
