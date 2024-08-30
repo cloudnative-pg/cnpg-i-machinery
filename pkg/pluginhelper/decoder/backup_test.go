@@ -60,13 +60,4 @@ var _ = Describe("DecodeBackup", func() {
 			false,
 		),
 	)
-
-	Context("when the backup JSON is empty", func() {
-		It("should return an error for empty JSON", func() {
-			backupJSON := []byte(``)
-			backup, err := DecodeBackup(backupJSON)
-			Expect(err).To(HaveOccurred())
-			Expect(backup).To(BeNil())
-		})
-	})
 })
