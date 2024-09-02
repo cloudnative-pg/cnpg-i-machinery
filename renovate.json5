@@ -5,7 +5,9 @@
     ":gitSignOff",
     ":semanticCommitType(chore)",
     ":labels(automated,no-issue)",
-    "customManagers:githubActionsVersions"
+    "customManagers:githubActionsVersions",
+    ":automergeMinor",
+    ":automergeDigest",
   ],
   "postUpdateOptions": [
     "gomodTidy"
@@ -40,7 +42,7 @@
         "patch",
         "digest"
       ],
-      "groupName": "all non-major go dependencies"
+      "groupName": "all non-major go dependencies",
     },
     {
       "matchDatasources": [
@@ -52,7 +54,7 @@
       "matchUpdateTypes": [
         "digest"
       ],
-      "groupName": "all cloudnative-pg daggerverse dependencies"
+      "groupName": "all cloudnative-pg daggerverse dependencies",
     },
     {
       "matchUpdateTypes": [
@@ -60,7 +62,6 @@
         "patch"
       ],
       "matchCurrentVersion": "!/^0/",
-      "automerge": true
     }
   ]
 }
