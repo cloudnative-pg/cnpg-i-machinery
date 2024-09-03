@@ -15,5 +15,5 @@ limitations under the License.
 */
 
 // Package clusterstatus provides a set of primitives to compose
-// the SetClusterStatus RPC Response
+// the SetStatusInCluster RPC Response
 package clusterstatus
