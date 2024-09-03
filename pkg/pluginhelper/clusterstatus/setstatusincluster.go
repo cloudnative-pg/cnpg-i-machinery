@@ -36,32 +36,32 @@ func (err NotAnObjectError) Error() string {
 	)
 }
 
-// SetClusterStatusResponseBuilder a SetStatus response builder.
-type SetClusterStatusResponseBuilder struct{}
+// SetStatusInClusterResponseBuilder a SetStatus response builder.
+type SetStatusInClusterResponseBuilder struct{}
 
-// NewSetClusterStatusResponseBuilder is an helper that creates the SetStatus endpoint responses.
-func NewSetClusterStatusResponseBuilder() *SetClusterStatusResponseBuilder {
-	return &SetClusterStatusResponseBuilder{}
+// NewSetStatusInClusterResponseBuilder is an helper that creates the SetStatus endpoint responses.
+func NewSetStatusInClusterResponseBuilder() *SetStatusInClusterResponseBuilder {
+	return &SetStatusInClusterResponseBuilder{}
 }
 
 // NoOpResponse this response will ensure that no changes will be done to the plugin status.
-func (s SetClusterStatusResponseBuilder) NoOpResponse() *operator.SetClusterStatusResponse {
-	return &operator.SetClusterStatusResponse{JsonStatus: nil}
+func (s SetStatusInClusterResponseBuilder) NoOpResponse() *operator.SetStatusInClusterResponse {
+	return &operator.SetStatusInClusterResponse{JsonStatus: nil}
 }
 
 // SetEmptyStatusResponse will set the plugin status to an empty object '{}'.
-func (s SetClusterStatusResponseBuilder) SetEmptyStatusResponse() *operator.SetClusterStatusResponse {
+func (s SetStatusInClusterResponseBuilder) SetEmptyStatusResponse() *operator.SetStatusInClusterResponse {
 	b, err := json.Marshal(map[string]string{})
 	if err != nil {
 		panic("JSON mashaller failed for empty map")
 	}
 
-	return &operator.SetClusterStatusResponse{JsonStatus: b}
+	return &operator.SetStatusInClusterResponse{JsonStatus: b}
 }
 
 // JSONStatusResponse requires a struct or map that can be translated to a JSON object,
 // will set the status to the passed object.
-func (s SetClusterStatusResponseBuilder) JSONStatusResponse(obj any) (*operator.SetClusterStatusResponse, error) {
+func (s SetStatusInClusterResponseBuilder) JSONStatusResponse(obj any) (*operator.SetStatusInClusterResponse, error) {
 	if obj == nil {
 		return nil, ErrNilObject
 	}
@@ -76,7 +76,7 @@ func (s SetClusterStatusResponseBuilder) JSONStatusResponse(obj any) (*operator.
 		return nil, NotAnObjectError{representation: jsonObject}
 	}
 
-	return &operator.SetClusterStatusResponse{
+	return &operator.SetStatusInClusterResponse{
 		JsonStatus: jsonObject,
 	}, nil
 }

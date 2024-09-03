@@ -28,24 +28,24 @@ var _ = Describe("BuildSetStatusResponse", func() {
 
 	It("should properly form a response with an object, allowing the plugins to set the status", func() {
 		jsonBody := test{Name: "test"}
-		b, err := NewSetClusterStatusResponseBuilder().JSONStatusResponse(&jsonBody)
+		b, err := NewSetStatusInClusterResponseBuilder().JSONStatusResponse(&jsonBody)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(b.GetJsonStatus()).To(Equal([]byte(`{"string":"test"}`)))
 	})
 
 	It("should properly form a response for a 'nil' value, allowing the plugins to do a 'noop'", func() {
-		b := NewSetClusterStatusResponseBuilder().NoOpResponse()
+		b := NewSetStatusInClusterResponseBuilder().NoOpResponse()
 		Expect(b.GetJsonStatus()).To(BeNil())
 	})
 
 	It("should serialize an empty JSONStatus, allowing the plugins to reset its status", func() {
-		b := NewSetClusterStatusResponseBuilder().SetEmptyStatusResponse()
+		b := NewSetStatusInClusterResponseBuilder().SetEmptyStatusResponse()
 		Expect(b.GetJsonStatus()).ToNot(BeEmpty())
 	})
 
 	It("should return an error if it is an invalid JSON object", func() {
 		wrongType := 4
-		_, err := NewSetClusterStatusResponseBuilder().JSONStatusResponse(&wrongType)
+		_, err := NewSetStatusInClusterResponseBuilder().JSONStatusResponse(&wrongType)
 		Expect(err).To(HaveOccurred())
 	})
 })
