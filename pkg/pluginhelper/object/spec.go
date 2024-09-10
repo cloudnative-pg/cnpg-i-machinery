@@ -16,12 +16,22 @@ limitations under the License.
 
 package object
 
-import corev1 "k8s.io/api/core/v1"
+import (
+	"errors"
+
+	corev1 "k8s.io/api/core/v1"
+)
 
 const (
 	pluginVolumeName = "plugins"
 	pluginMountPath  = "/plugins"
+
+	postgresContainerName = "postgres"
 )
+
+// ErrNoPostgresContainerFound is raised when there's no PostgreSQL container
+// in the passed instance Pod.
+var ErrNoPostgresContainerFound = errors.New("no postgres container into instance Pod")
 
 // InjectPluginVolume injects the plugin volume into a CNPG Pod.
 func InjectPluginVolume(pod *corev1.Pod) {
@@ -44,7 +54,7 @@ func InjectPluginVolume(pod *corev1.Pod) {
 	})
 
 	for i := range pod.Spec.Containers {
-		if pod.Spec.Containers[i].Name == "postgres" {
+		if pod.Spec.Containers[i].Name == postgresContainerName {
 			pod.Spec.Containers[i].VolumeMounts = append(
 				pod.Spec.Containers[i].VolumeMounts,
 				corev1.VolumeMount{
@@ -54,4 +64,46 @@ func InjectPluginVolume(pod *corev1.Pod) {
 			)
 		}
 	}
+}
+
+// InjectPluginSidecar injects a plugin sidecar into a CNPG Pod.
+//
+// If the "injectPostgresVolumeMount" flag is true, this will append all the volume
+// mounts that are used in the instance manager Pod to the passed sidecar
+// container, granting it superuser access to the PostgreSQL instance.
+//
+// Besides the value of "injectPostgresVolumeMount", the plugin volume
+// will always be injected in the PostgreSQL container.
+func InjectPluginSidecar(pod *corev1.Pod, sidecar *corev1.Container, injectPostgresVolumeMounts bool) error {
+	sidecar = sidecar.DeepCopy()
+	InjectPluginVolume(pod)
+
+	var volumeMounts []corev1.VolumeMount
+	sidecarContainerFound := false
+	postgresContainerFound := false
+	for i := range pod.Spec.Containers {
+		if pod.Spec.Containers[i].Name == postgresContainerName {
+			volumeMounts = pod.Spec.Containers[i].VolumeMounts
+			postgresContainerFound = true
+		} else if pod.Spec.Containers[i].Name == sidecar.Name {
+			sidecarContainerFound = true
+		}
+	}
+
+	if sidecarContainerFound {
+		// The sidecar container was already added
+		return nil
+	}
+
+	if !postgresContainerFound {
+		return ErrNoPostgresContainerFound
+	}
+
+	// Do not modify the passed sidecar definition
+	if injectPostgresVolumeMounts {
+		sidecar.VolumeMounts = append(sidecar.VolumeMounts, volumeMounts...)
+	}
+	pod.Spec.Containers = append(pod.Spec.Containers, *sidecar)
+
+	return nil
 }
