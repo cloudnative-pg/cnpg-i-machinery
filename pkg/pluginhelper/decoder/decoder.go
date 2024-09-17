@@ -20,8 +20,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // WrongObjectTypeError is raised when the GVK of the passed JSON
@@ -37,7 +37,7 @@ func (e *WrongObjectTypeError) Error() string {
 }
 
 // DecodeObject decodes a JSON representation of an object.
-func DecodeObject(objectJSON []byte, object client.Object, expectedGVK schema.GroupVersionKind) error {
+func DecodeObject(objectJSON []byte, object runtime.Object, expectedGVK schema.GroupVersionKind) error {
 	if err := json.Unmarshal(objectJSON, object); err != nil {
 		return fmt.Errorf("error unmarshalling object JSON: %w", err)
 	}

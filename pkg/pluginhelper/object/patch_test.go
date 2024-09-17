@@ -18,7 +18,7 @@ package object
 
 import (
 	corev1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -26,7 +26,7 @@ import (
 
 var _ = Describe("CreatePatch", func() {
 	DescribeTable("should create patches for different objects",
-		func(newObject, oldObject client.Object, expectedPatch []byte, succeeds bool) {
+		func(newObject, oldObject runtime.Object, expectedPatch []byte, succeeds bool) {
 			patch, err := CreatePatch(newObject, oldObject)
 			if succeeds {
 				Expect(err).NotTo(HaveOccurred())
