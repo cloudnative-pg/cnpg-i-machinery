@@ -20,11 +20,11 @@ import (
 	"fmt"
 
 	"github.com/snorwin/jsonpatch"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // CreatePatch creates a JSON patch from the diff between the old and new object.
-func CreatePatch(newObject, oldObject client.Object) ([]byte, error) {
+func CreatePatch(newObject, oldObject runtime.Object) ([]byte, error) {
 	ptc, err := jsonpatch.CreateJSONPatch(newObject, oldObject)
 	if err != nil {
 		return nil, fmt.Errorf("while creating JSON patch: %w", err)
