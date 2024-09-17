@@ -30,14 +30,14 @@ import (
 	"syscall"
 
 	"github.com/cloudnative-pg/cnpg-i/pkg/identity"
+	"github.com/cloudnative-pg/machinery/pkg/log"
 	"github.com/go-logr/logr"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-
-	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 const (
@@ -66,9 +66,10 @@ func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnri
 			_, err := logr.FromContext(cmd.Context())
 			if err == nil {
 				// caller did not supply a logger, inject one
-				ctx := logging.NewIntoContext(
-					cmd.Context(),
-					viper.GetBool("debug"))
+				flags := log.NewFlags(zap.Options{Development: viper.GetBool("debug")})
+				flags.ConfigureLogging()
+
+				ctx := log.IntoContext(cmd.Context(), log.WithName("cmd_serve"))
 				cmd.SetContext(ctx)
 			}
 		},
@@ -81,7 +82,7 @@ func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnri
 	cmd.PersistentFlags().Bool(
 		"debug",
 		true,
-		"Enable debugging mode",
+		"Enable debugging mode, intended to be used only during development",
 	)
 	_ = viper.BindPFlag("debug", cmd.PersistentFlags().Lookup("debug"))
 
@@ -128,7 +129,7 @@ func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnri
 
 // run starts listening for GRPC requests.
 func run(ctx context.Context, identityImpl identity.IdentityServer, enrichers ...ServerEnricher) error {
-	logger := logging.FromContext(ctx)
+	logger := log.FromContext(ctx)
 
 	identityResponse, err := identityImpl.GetPluginMetadata(
 		ctx,
@@ -213,7 +214,7 @@ func setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) {
 	serverKeyPath := viper.GetString("server-key")
 	clientCertPath := viper.GetString("client-cert")
 
-	logger := logging.FromContext(ctx).WithValues(
+	logger := log.FromContext(ctx).WithValues(
 		"serverCertPath", serverCertPath,
 		"serverKeyPath", serverKeyPath,
 		"clientCertPath", clientCertPath,
@@ -248,7 +249,7 @@ func buildTLSConfig(
 	serverKeyPath string,
 	clientCertPath string,
 ) (*tls.Config, error) {
-	logger := logging.FromContext(ctx).WithValues(
+	logger := log.FromContext(ctx).WithValues(
 		"serverCertPath", serverCertPath,
 		"serverKeyPath", serverKeyPath,
 		"clientCertPath", clientCertPath,
@@ -289,7 +290,7 @@ func createListener(ctx context.Context, metadata *identity.GetPluginMetadataRes
 }
 
 func createTCPListener(ctx context.Context) (net.Listener, error) {
-	logger := logging.FromContext(ctx)
+	logger := log.FromContext(ctx)
 
 	serverAddress := viper.GetString("server-address")
 
@@ -316,7 +317,7 @@ func createUnixDomainSocketListener(
 	ctx context.Context,
 	metadata *identity.GetPluginMetadataResponse,
 ) (net.Listener, error) {
-	logger := logging.FromContext(ctx)
+	logger := log.FromContext(ctx)
 
 	pluginPath := viper.GetString("plugin-path")
 	if len(pluginPath) == 0 {
@@ -351,7 +352,7 @@ func createUnixDomainSocketListener(
 
 // removeStaleSocket removes a stale unix domain socket.
 func removeStaleSocket(ctx context.Context, pluginPath string) error {
-	logger := logging.FromContext(ctx)
+	logger := log.FromContext(ctx)
 	_, err := os.Stat(pluginPath)
 
 	switch {
@@ -375,7 +376,7 @@ func removeStaleSocket(ctx context.Context, pluginPath string) error {
 // handleSignals makes sure that we close the listening socket
 // when we receive a quit-like signal.
 func handleSignals(ctx context.Context, listener net.Listener) {
-	logger := logging.FromContext(ctx)
+	logger := log.FromContext(ctx)
 
 	sigc := make(chan os.Signal, 1)
 	signal.Notify(sigc, syscall.SIGTERM, syscall.SIGABRT, syscall.SIGINT)
