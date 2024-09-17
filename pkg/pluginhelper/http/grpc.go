@@ -19,29 +19,27 @@ package http
 import (
 	"context"
 
-	"github.com/go-logr/logr"
+	"github.com/cloudnative-pg/machinery/pkg/log"
 	"google.golang.org/grpc"
-
-	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
 )
 
 // loggingUnaryServerInterceptor injects the passed logger into the gRPC call context for all inbound unary calls.
 //
 // Works around go-grpc's lack of a WithContext option to set a root context.
-func loggingUnaryServerInterceptor(logger logr.Logger) grpc.UnaryServerInterceptor {
+func loggingUnaryServerInterceptor(logger log.Logger) grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
 		req interface{},
 		_ *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
 	) (interface{}, error) {
-		newCtx := logging.IntoContext(ctx, logger)
+		newCtx := log.IntoContext(ctx, logger)
 		return handler(newCtx, req)
 	}
 }
 
 // logFailedRequestsUnaryServerInterceptor logs failed requests.
-func logFailedRequestsUnaryServerInterceptor(logger logr.Logger) grpc.UnaryServerInterceptor {
+func logFailedRequestsUnaryServerInterceptor(logger log.Logger) grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
 		req interface{},
@@ -64,26 +62,26 @@ func logFailedRequestsUnaryServerInterceptor(logger logr.Logger) grpc.UnaryServe
 // logInjectStream wraps a grpc.ServerStream and injects a logger into the context.
 type logInjectStream struct {
 	grpc.ServerStream
-	logger logr.Logger
+	logger log.Logger
 }
 
 // Context injects the passed logger into the gRPC call context for all inbound streaming calls.
 func (s *logInjectStream) Context() context.Context {
-	return logging.IntoContext(s.ServerStream.Context(), s.logger)
+	return log.IntoContext(s.ServerStream.Context(), s.logger)
 }
 
 // Inject the passed logger into the gRPC call context for all inbound streaming calls
 // by wrapping the ServerStream and overriding the Context() method.
 //
 // Works around go-grpc's lack of a WithContext option to set a root context.
-func loggingStreamServerInterceptor(logger logr.Logger) grpc.StreamServerInterceptor {
+func loggingStreamServerInterceptor(logger log.Logger) grpc.StreamServerInterceptor {
 	return func(srv any, ss grpc.ServerStream, _ *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		return handler(srv, &logInjectStream{ss, logger})
 	}
 }
 
 // logFailedRequestsStreamServerInterceptor logs failed requests.
-func logFailedRequestsStreamServerInterceptor(logger logr.Logger) grpc.StreamServerInterceptor {
+func logFailedRequestsStreamServerInterceptor(logger log.Logger) grpc.StreamServerInterceptor {
 	return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		err := handler(srv, ss)
 		if err != nil {
