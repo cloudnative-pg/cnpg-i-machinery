@@ -49,17 +49,19 @@ tasks:
   go-test:
     desc: Run go test
     env:
-      # TODO: configure renovate
       # renovate: datasource=docker depName=golang versioning=semver
       GOLANG_IMAGE_VERSION: 1.23.1
-      # renovate: datasource=git-refs depName=gotest lookupName=https://github.com/Excoriate/daggerverse currentValue=main
-      DAGGER_GOTEST_SHA: 69b71c6f9d33a39f2650983e251226d0938220be
+      # renovate: datasource=git-refs depName=go lookupName=https://github.com/sagikazarmark/daggerverse currentValue=main
+      DAGGER_GO_SHA: 89a5a332f2ad1a182e6e8172f6872c4ab3ada507
     cmds:
       - >
-        GITHUB_REF= dagger -s call -m github.com/Excoriate/daggerverse/gotest@90a5d911a70510f9004544d4a25d39d917f1f668
-        base --image-url golang:${GOLANG_IMAGE_VERSION}
+        GITHUB_REF= dagger -s call -m github.com/sagikazarmark/daggerverse/go@${DAGGER_GO_SHA}
+        --version ${GOLANG_IMAGE_VERSION}
         with-cgo-disabled
-        run-go-test --src .
+        exec --src . --args go --args test --args './...'
+        stdout
+    sources:
+      - ./**/*.go
 
   ci:
     desc: Run the CI pipeline
