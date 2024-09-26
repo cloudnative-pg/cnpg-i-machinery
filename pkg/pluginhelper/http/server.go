@@ -75,7 +75,17 @@ func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnri
 		},
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return run(cmd.Context(), identityImpl, enrichers...)
+			srv := &Server{
+				IdentityImpl:   identityImpl,
+				Enrichers:      enrichers,
+				ServerCertPath: viper.GetString("server-cert"),
+				ServerKeyPath:  viper.GetString("server-key"),
+				ClientCertPath: viper.GetString("client-cert"),
+				ServerAddress:  viper.GetString("server-address"),
+				PluginPath:     viper.GetString("plugin-path"),
+			}
+
+			return srv.Start(cmd.Context())
 		},
 	}
 
@@ -127,11 +137,24 @@ func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnri
 	return cmd
 }
 
-// run starts listening for GRPC requests.
-func run(ctx context.Context, identityImpl identity.IdentityServer, enrichers ...ServerEnricher) error {
+// Server is the main structure to start a GRPC server.
+type Server struct {
+	IdentityImpl   identity.IdentityServer
+	Enrichers      []ServerEnricher
+	ServerCertPath string
+	ServerKeyPath  string
+	ClientCertPath string
+	// mutually exclusive with pluginPath
+	ServerAddress string
+	// mutually exclusive with serverAddress
+	PluginPath string
+}
+
+// Start starts the server.
+func (s *Server) Start(ctx context.Context) error {
 	logger := log.FromContext(ctx)
 
-	identityResponse, err := identityImpl.GetPluginMetadata(
+	identityResponse, err := s.IdentityImpl.GetPluginMetadata(
 		ctx,
 		&identity.GetPluginMetadataRequest{})
 	if err != nil {
@@ -140,14 +163,14 @@ func run(ctx context.Context, identityImpl identity.IdentityServer, enrichers ..
 	}
 
 	// Start accepting connections on the socket
-	listener, err := createListener(ctx, identityResponse)
+	listener, err := s.createListener(ctx, identityResponse)
 	if err != nil {
 		logger.Error(err, "While starting server")
 		return fmt.Errorf("cannot listen on the socket: %w", err)
 	}
 
 	// Handle quit-like signal
-	handleSignals(ctx, listener)
+	s.handleSignals(ctx, listener)
 
 	// Create GRPC server
 	serverOptions := []grpc.ServerOption{
@@ -162,8 +185,8 @@ func run(ctx context.Context, identityImpl identity.IdentityServer, enrichers ..
 			recovery.StreamServerInterceptor(),
 		),
 	}
-	if isTLSEnabled() {
-		certificatesOptions, err := setupTLSCerts(ctx)
+	if s.isTLSEnabled() {
+		certificatesOptions, err := s.setupTLSCerts(ctx)
 		if err != nil {
 			logger.Error(err, "While setting up TLS authentication")
 			return err
@@ -177,8 +200,8 @@ func run(ctx context.Context, identityImpl identity.IdentityServer, enrichers ..
 	grpcServer := grpc.NewServer(serverOptions...)
 	identity.RegisterIdentityServer(
 		grpcServer,
-		identityImpl)
-	for _, enrich := range enrichers {
+		s.IdentityImpl)
+	for _, enrich := range s.Enrichers {
 		if enrichErr := enrich(grpcServer); enrichErr != nil {
 			return enrichErr
 		}
@@ -201,38 +224,30 @@ func run(ctx context.Context, identityImpl identity.IdentityServer, enrichers ..
 	return nil
 }
 
-func isTLSEnabled() bool {
-	serverCertPath := viper.GetString("server-cert")
-	serverKeyPath := viper.GetString("server-key")
-	clientCertPath := viper.GetString("client-cert")
-
-	return serverCertPath != "" || serverKeyPath != "" || clientCertPath != ""
+func (s *Server) isTLSEnabled() bool {
+	return s.ServerCertPath != "" || s.ServerKeyPath != "" || s.ClientCertPath != ""
 }
 
-func setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) {
-	serverCertPath := viper.GetString("server-cert")
-	serverKeyPath := viper.GetString("server-key")
-	clientCertPath := viper.GetString("client-cert")
-
+func (s *Server) setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) {
 	logger := log.FromContext(ctx).WithValues(
-		"serverCertPath", serverCertPath,
-		"serverKeyPath", serverKeyPath,
-		"clientCertPath", clientCertPath,
+		"serverCertPath", s.ServerCertPath,
+		"serverKeyPath", s.ServerKeyPath,
+		"clientCertPath", s.ClientCertPath,
 	)
 
-	if serverCertPath == "" {
+	if s.ServerCertPath == "" {
 		return nil, errNoServerCert
 	}
 
-	if serverKeyPath == "" {
+	if s.ServerKeyPath == "" {
 		return nil, errNoServerKey
 	}
 
-	if clientCertPath == "" {
+	if s.ClientCertPath == "" {
 		return nil, errNoClientCert
 	}
 
-	tlsConfig, err := buildTLSConfig(ctx, serverCertPath, serverKeyPath, clientCertPath)
+	tlsConfig, err := s.buildTLSConfig(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -243,26 +258,21 @@ func setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) {
 	return &result, nil
 }
 
-func buildTLSConfig(
-	ctx context.Context,
-	serverCertPath string,
-	serverKeyPath string,
-	clientCertPath string,
-) (*tls.Config, error) {
+func (s *Server) buildTLSConfig(ctx context.Context) (*tls.Config, error) {
 	logger := log.FromContext(ctx).WithValues(
-		"serverCertPath", serverCertPath,
-		"serverKeyPath", serverKeyPath,
-		"clientCertPath", clientCertPath,
+		"serverCertPath", s.ServerCertPath,
+		"serverKeyPath", s.ServerKeyPath,
+		"clientCertPath", s.ClientCertPath,
 	)
 
-	cert, err := tls.LoadX509KeyPair(serverCertPath, serverKeyPath)
+	cert, err := tls.LoadX509KeyPair(s.ServerCertPath, s.ServerKeyPath)
 	if err != nil {
 		logger.Error(err, "failed to load server key pair")
 		return nil, fmt.Errorf("failed to load server key pair: %w", err)
 	}
 
 	caCertPool := x509.NewCertPool()
-	caBytes, err := os.ReadFile(filepath.Clean(clientCertPath))
+	caBytes, err := os.ReadFile(filepath.Clean(s.ClientCertPath))
 	if err != nil {
 		logger.Error(err, "failed to read client public key")
 		return nil, fmt.Errorf("failed to read client public key: %w", err)
@@ -280,53 +290,50 @@ func buildTLSConfig(
 	}, nil
 }
 
-func createListener(ctx context.Context, metadata *identity.GetPluginMetadataResponse) (net.Listener, error) {
-	serverAddress := viper.GetString("server-address")
-	if len(serverAddress) != 0 {
-		return createTCPListener(ctx)
+func (s *Server) createListener(ctx context.Context, metadata *identity.GetPluginMetadataResponse) (net.Listener, error) {
+	if len(s.ServerAddress) != 0 {
+		return s.createTCPListener(ctx)
 	}
 
-	return createUnixDomainSocketListener(ctx, metadata)
+	return s.createUnixDomainSocketListener(ctx, metadata)
 }
 
-func createTCPListener(ctx context.Context) (net.Listener, error) {
+func (s *Server) createTCPListener(ctx context.Context) (net.Listener, error) {
 	logger := log.FromContext(ctx)
-
-	serverAddress := viper.GetString("server-address")
 
 	logger.Info(
 		"Starting plugin listener",
 		"protocol", tcpNetwork,
-		"serverAddress", serverAddress,
+		"serverAddress", s.ServerAddress,
 	)
 
 	// Start accepting connections on the server address
 	listener, err := net.Listen(
 		tcpNetwork,
-		serverAddress,
+		s.ServerAddress,
 	)
 	if err != nil {
 		logger.Error(err, "While starting server")
-		return nil, fmt.Errorf("cannot listen on `%s`: %w", serverAddress, err)
+		return nil, fmt.Errorf("cannot listen on `%s`: %w", s.ServerAddress, err)
 	}
 
 	return listener, nil
 }
 
-func createUnixDomainSocketListener(
+func (s *Server) createUnixDomainSocketListener(
 	ctx context.Context,
 	metadata *identity.GetPluginMetadataResponse,
 ) (net.Listener, error) {
 	logger := log.FromContext(ctx)
 
-	pluginPath := viper.GetString("plugin-path")
-	if len(pluginPath) == 0 {
+	pluginPath := s.PluginPath
+	if len(s.PluginPath) == 0 {
 		pluginPath = defaultPluginPath
 	}
 	socketName := path.Join(pluginPath, metadata.GetName())
 
 	// Remove stale unix socket it still existent
-	if err := removeStaleSocket(ctx, socketName); err != nil {
+	if err := s.removeStaleSocket(ctx, socketName); err != nil {
 		logger.Error(err, "While removing old unix socket")
 		return nil, err
 	}
@@ -351,7 +358,7 @@ func createUnixDomainSocketListener(
 }
 
 // removeStaleSocket removes a stale unix domain socket.
-func removeStaleSocket(ctx context.Context, pluginPath string) error {
+func (s *Server) removeStaleSocket(ctx context.Context, pluginPath string) error {
 	logger := log.FromContext(ctx)
 	_, err := os.Stat(pluginPath)
 
@@ -375,7 +382,7 @@ func removeStaleSocket(ctx context.Context, pluginPath string) error {
 
 // handleSignals makes sure that we close the listening socket
 // when we receive a quit-like signal.
-func handleSignals(ctx context.Context, listener net.Listener) {
+func (s *Server) handleSignals(ctx context.Context, listener net.Listener) {
 	logger := log.FromContext(ctx)
 
 	sigc := make(chan os.Signal, 1)
