@@ -26,9 +26,7 @@ import (
 )
 
 var _ = Describe("BuildTLSConfig", func() {
-	var (
-		server Server
-	)
+	var server Server
 
 	writeTempFile := func(data []byte) (string, error) {
 		file, err := os.CreateTemp("", "certfile")

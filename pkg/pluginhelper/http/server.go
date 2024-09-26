@@ -290,7 +290,10 @@ func (s *Server) buildTLSConfig(ctx context.Context) (*tls.Config, error) {
 	}, nil
 }
 
-func (s *Server) createListener(ctx context.Context, metadata *identity.GetPluginMetadataResponse) (net.Listener, error) {
+func (s *Server) createListener(
+	ctx context.Context,
+	metadata *identity.GetPluginMetadataResponse,
+) (net.Listener, error) {
 	if len(s.ServerAddress) != 0 {
 		return s.createTCPListener(ctx)
 	}
