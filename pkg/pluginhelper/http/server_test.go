@@ -27,9 +27,7 @@ import (
 
 var _ = Describe("BuildTLSConfig", func() {
 	var (
-		serverCertPath string
-		serverKeyPath  string
-		clientCertPath string
+		server Server
 	)
 
 	writeTempFile := func(data []byte) (string, error) {
@@ -55,24 +53,34 @@ var _ = Describe("BuildTLSConfig", func() {
 		)
 		Expect(err).ToNot(HaveOccurred())
 
-		serverCertPath, err = writeTempFile(certs.serverCertPEM)
+		serverCertPath, err := writeTempFile(certs.serverCertPEM)
 		Expect(err).ToNot(HaveOccurred())
 
-		serverKeyPath, err = writeTempFile(certs.serverKeyPEM)
+		serverKeyPath, err := writeTempFile(certs.serverKeyPEM)
 		Expect(err).ToNot(HaveOccurred())
 
-		clientCertPath, err = writeTempFile(certs.clientCertPEM)
+		clientCertPath, err := writeTempFile(certs.clientCertPEM)
 		Expect(err).ToNot(HaveOccurred())
+
+		server = Server{
+			IdentityImpl:   nil,
+			Enrichers:      nil,
+			ServerCertPath: serverCertPath,
+			ServerKeyPath:  serverKeyPath,
+			ClientCertPath: clientCertPath,
+			ServerAddress:  "",
+			PluginPath:     "",
+		}
 	})
 
 	AfterEach(func() {
-		Expect(os.Remove(serverCertPath)).ToNot(HaveOccurred())
-		Expect(os.Remove(serverKeyPath)).ToNot(HaveOccurred())
-		Expect(os.Remove(clientCertPath)).ToNot(HaveOccurred())
+		Expect(os.Remove(server.ServerCertPath)).ToNot(HaveOccurred())
+		Expect(os.Remove(server.ServerKeyPath)).ToNot(HaveOccurred())
+		Expect(os.Remove(server.ClientCertPath)).ToNot(HaveOccurred())
 	})
 
 	It("should successfully create a TLS config", func(ctx SpecContext) {
-		tlsConfig, err := buildTLSConfig(ctx, serverCertPath, serverKeyPath, clientCertPath)
+		tlsConfig, err := server.buildTLSConfig(ctx)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(tlsConfig).ToNot(BeNil())
 		Expect(tlsConfig.Certificates).To(HaveLen(1))
