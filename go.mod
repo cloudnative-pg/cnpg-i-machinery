@@ -5,9 +5,9 @@ go 1.22.0
 toolchain go1.23.1
 
 require (
-	github.com/cloudnative-pg/cloudnative-pg v1.24.0
-	github.com/cloudnative-pg/cnpg-i v0.0.0-20241001103001-7e24b2eccd50
-	github.com/cloudnative-pg/machinery v0.0.0-20241001075747-34c8797af80f
+	github.com/cloudnative-pg/cloudnative-pg v1.24.1-0.20241001084914-829808376542
+	github.com/cloudnative-pg/cnpg-i v0.0.0-20240820123829-5844b833f4eb
+	github.com/cloudnative-pg/machinery v0.0.0-20240919131343-9dd62b9257c7
 	github.com/go-logr/logr v1.4.2
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.1.0
 	github.com/onsi/ginkgo/v2 v2.20.2
@@ -15,7 +15,7 @@ require (
 	github.com/snorwin/jsonpatch v1.5.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	google.golang.org/grpc v1.67.1
+	google.golang.org/grpc v1.65.0
 	k8s.io/api v0.31.1
 	k8s.io/apimachinery v0.31.1
 	sigs.k8s.io/controller-runtime v0.19.0
@@ -24,6 +24,7 @@ require (
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/cloudnative-pg/barman-cloud v0.0.0-20240924124724-92831d48562a // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/emicklei/go-restful/v3 v3.12.1 // indirect
 	github.com/evanphx/json-patch/v5 v5.9.0 // indirect
@@ -92,11 +93,11 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.31.0 // indirect
-	k8s.io/client-go v0.31.0 // indirect
+	k8s.io/apiextensions-apiserver v0.31.1 // indirect
+	k8s.io/client-go v0.31.1 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect
-	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8 // indirect
+	k8s.io/kube-openapi v0.0.0-20240903163716-9e1beecbcb38 // indirect
+	k8s.io/utils v0.0.0-20240921022957-49e7df575cb6 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
