@@ -50,7 +50,7 @@ tasks:
     desc: Run go test
     env:
       # renovate: datasource=docker depName=golang versioning=semver
-      GOLANG_IMAGE_VERSION: 1.23.1
+      GOLANG_IMAGE_VERSION: 1.23.2
       # renovate: datasource=git-refs depName=go lookupName=https://github.com/sagikazarmark/daggerverse currentValue=main
       DAGGER_GO_SHA: c5e98557642c03370029ccde338fe7f27746bafc
     cmds:
