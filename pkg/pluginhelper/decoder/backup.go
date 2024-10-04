@@ -17,7 +17,7 @@ limitations under the License.
 package decoder
 
 import (
-	apiv1 "github.com/cloudnative-pg/cloudnative-pg/api/v1"
+	apiv1 "github.com/cloudnative-pg/api/pkg/api/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 

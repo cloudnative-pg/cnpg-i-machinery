@@ -17,7 +17,7 @@ limitations under the License.
 package common
 
 import (
-	apiv1 "github.com/cloudnative-pg/cloudnative-pg/api/v1"
+	apiv1 "github.com/cloudnative-pg/api/pkg/api/v1"
 )
 
 // Plugin represents a plugin with its associated cluster and parameters.

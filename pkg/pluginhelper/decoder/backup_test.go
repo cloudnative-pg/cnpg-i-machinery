@@ -17,7 +17,7 @@ limitations under the License.
 package decoder
 
 import (
-	v1 "github.com/cloudnative-pg/cloudnative-pg/api/v1"
+	v1 "github.com/cloudnative-pg/api/pkg/api/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	. "github.com/onsi/ginkgo/v2"
