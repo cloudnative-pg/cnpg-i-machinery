@@ -35,9 +35,14 @@ var ErrNoPostgresContainerFound = errors.New("no postgres container into instanc
 
 // InjectPluginVolume injects the plugin volume into a CNPG Pod.
 func InjectPluginVolume(pod *corev1.Pod) {
+	InjectPluginVolumeSpec(&pod.Spec)
+}
+
+// InjectPluginVolumeSpec injects the plugin volume into a CNPG Pod spec.
+func InjectPluginVolumeSpec(spec *corev1.PodSpec) {
 	foundPluginVolume := false
-	for i := range pod.Spec.Volumes {
-		if pod.Spec.Volumes[i].Name == pluginVolumeName {
+	for i := range spec.Volumes {
+		if spec.Volumes[i].Name == pluginVolumeName {
 			foundPluginVolume = true
 		}
 	}
@@ -46,17 +51,17 @@ func InjectPluginVolume(pod *corev1.Pod) {
 		return
 	}
 
-	pod.Spec.Volumes = append(pod.Spec.Volumes, corev1.Volume{
+	spec.Volumes = append(spec.Volumes, corev1.Volume{
 		Name: pluginVolumeName,
 		VolumeSource: corev1.VolumeSource{
 			EmptyDir: &corev1.EmptyDirVolumeSource{},
 		},
 	})
 
-	for i := range pod.Spec.Containers {
-		if pod.Spec.Containers[i].Name == postgresContainerName {
-			pod.Spec.Containers[i].VolumeMounts = append(
-				pod.Spec.Containers[i].VolumeMounts,
+	for i := range spec.Containers {
+		if spec.Containers[i].Name == postgresContainerName {
+			spec.Containers[i].VolumeMounts = append(
+				spec.Containers[i].VolumeMounts,
 				corev1.VolumeMount{
 					Name:      pluginVolumeName,
 					MountPath: pluginMountPath,
@@ -66,7 +71,12 @@ func InjectPluginVolume(pod *corev1.Pod) {
 	}
 }
 
-// InjectPluginSidecar injects a plugin sidecar into a CNPG Pod.
+// InjectPluginSidecar refer to InjectPluginSidecarSpec.
+func InjectPluginSidecar(pod *corev1.Pod, sidecar *corev1.Container, injectPostgresVolumeMounts bool) error {
+	return InjectPluginSidecarSpec(&pod.Spec, sidecar, injectPostgresVolumeMounts)
+}
+
+// InjectPluginSidecarSpec injects a plugin sidecar into a CNPG Pod spec.
 //
 // If the "injectPostgresVolumeMount" flag is true, this will append all the volume
 // mounts that are used in the instance manager Pod to the passed sidecar
@@ -74,20 +84,18 @@ func InjectPluginVolume(pod *corev1.Pod) {
 //
 // Besides the value of "injectPostgresVolumeMount", the plugin volume
 // will always be injected in the PostgreSQL container.
-func InjectPluginSidecar(pod *corev1.Pod, sidecar *corev1.Container, injectPostgresEnvironment bool) error {
+func InjectPluginSidecarSpec(spec *corev1.PodSpec, sidecar *corev1.Container, injectPostgresVolumeMounts bool) error {
 	sidecar = sidecar.DeepCopy()
-	InjectPluginVolume(pod)
+	InjectPluginVolumeSpec(spec)
 
 	var volumeMounts []corev1.VolumeMount
-	var envs []corev1.EnvVar
 	sidecarContainerFound := false
 	postgresContainerFound := false
-	for i := range pod.Spec.Containers {
-		if pod.Spec.Containers[i].Name == postgresContainerName {
-			volumeMounts = pod.Spec.Containers[i].VolumeMounts
-			envs = pod.Spec.Containers[i].Env
+	for i := range spec.Containers {
+		if spec.Containers[i].Name == postgresContainerName {
+			volumeMounts = spec.Containers[i].VolumeMounts
 			postgresContainerFound = true
-		} else if pod.Spec.Containers[i].Name == sidecar.Name {
+		} else if spec.Containers[i].Name == sidecar.Name {
 			sidecarContainerFound = true
 		}
 	}
@@ -102,11 +110,10 @@ func InjectPluginSidecar(pod *corev1.Pod, sidecar *corev1.Container, injectPostg
 	}
 
 	// Do not modify the passed sidecar definition
-	if injectPostgresEnvironment {
+	if injectPostgresVolumeMounts {
 		sidecar.VolumeMounts = append(sidecar.VolumeMounts, volumeMounts...)
-		sidecar.Env = append(sidecar.Env, envs...)
 	}
-	pod.Spec.Containers = append(pod.Spec.Containers, *sidecar)
+	spec.Containers = append(spec.Containers, *sidecar)
 
 	return nil
 }
