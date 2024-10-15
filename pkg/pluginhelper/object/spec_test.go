@@ -97,7 +97,7 @@ var _ = Describe("InjectPluginVolume", func() {
 	})
 })
 
-var _ = Describe("InjectPluginSidecar", func() {
+var _ = Describe("InjectPostgresPluginSidecar", func() {
 	var sidecar *corev1.Container
 
 	BeforeEach(func() {
@@ -118,15 +118,15 @@ var _ = Describe("InjectPluginSidecar", func() {
 		}
 
 		It("will fail if we need to inject the volume mounts", func() {
-			err := InjectPluginSidecar(pod, sidecar, true)
+			err := InjectPostgresPluginSidecar(pod, sidecar, true)
 			Expect(err).To(HaveOccurred())
-			Expect(err).To(Equal(ErrNoPostgresContainerFound))
+			Expect(err).To(Equal(ErrNoMainContainerFound))
 		})
 
 		It("will fail if we don't need to inject the volume mounts", func() {
-			err := InjectPluginSidecar(pod, sidecar, false)
+			err := InjectPostgresPluginSidecar(pod, sidecar, false)
 			Expect(err).To(HaveOccurred())
-			Expect(err).To(Equal(ErrNoPostgresContainerFound))
+			Expect(err).To(Equal(ErrNoMainContainerFound))
 		})
 	})
 
@@ -153,7 +153,7 @@ var _ = Describe("InjectPluginSidecar", func() {
 
 		When("the PG volume mounts injection is requested", func() {
 			It("it will inherit the volume mounts and the plugin volume", func() {
-				err := InjectPluginSidecar(pod, sidecar, true)
+				err := InjectPostgresPluginSidecar(pod, sidecar, true)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(pod.Spec.Containers).To(HaveLen(2))
 				Expect(pod.Spec.Containers[1].Name).To(Equal(sidecar.Name))
@@ -168,7 +168,7 @@ var _ = Describe("InjectPluginSidecar", func() {
 
 		When("the PG volume mounts is set to not be inherited", func() {
 			It("it will not inherit the volume mounts", func() {
-				err := InjectPluginSidecar(pod, sidecar, false)
+				err := InjectPostgresPluginSidecar(pod, sidecar, false)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(pod.Spec.Containers).To(HaveLen(2))
 				Expect(pod.Spec.Containers[0].Name).To(Equal(postgresContainerName))
