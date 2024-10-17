@@ -32,13 +32,13 @@ const (
 // ErrNoMainContainerFound is raised when there's no main container.
 var ErrNoMainContainerFound = errors.New("no main container found into the Pod")
 
-// InjectPluginVolume injects the plugin volume into a CNPG Pod.
-func InjectPluginVolume(pod *corev1.Pod) {
-	InjectPluginVolumePodSpec(&pod.Spec)
+// InjectIntoPostgresPluginVolume injects the plugin volume into a CNPG Pod.
+func InjectIntoPostgresPluginVolume(pod *corev1.Pod) {
+	InjectPluginVolumePodSpec(&pod.Spec, postgresContainerName)
 }
 
 // InjectPluginVolumePodSpec injects the plugin volume into a CNPG Pod spec.
-func InjectPluginVolumePodSpec(spec *corev1.PodSpec) {
+func InjectPluginVolumePodSpec(spec *corev1.PodSpec, mainContainerName string) {
 	foundPluginVolume := false
 	for i := range spec.Volumes {
 		if spec.Volumes[i].Name == pluginVolumeName {
@@ -58,7 +58,7 @@ func InjectPluginVolumePodSpec(spec *corev1.PodSpec) {
 	})
 
 	for i := range spec.Containers {
-		if spec.Containers[i].Name == postgresContainerName {
+		if spec.Containers[i].Name == mainContainerName {
 			spec.Containers[i].VolumeMounts = append(
 				spec.Containers[i].VolumeMounts,
 				corev1.VolumeMount{
@@ -70,8 +70,8 @@ func InjectPluginVolumePodSpec(spec *corev1.PodSpec) {
 	}
 }
 
-// InjectPostgresPluginSidecar refer to InjectPluginSidecarPodSpec.
-func InjectPostgresPluginSidecar(pod *corev1.Pod, sidecar *corev1.Container, injectPostgresVolumeMounts bool) error {
+// InjectSidecarIntoPostgres refer to InjectPluginSidecarPodSpec.
+func InjectSidecarIntoPostgres(pod *corev1.Pod, sidecar *corev1.Container, injectPostgresVolumeMounts bool) error {
 	return InjectPluginSidecarPodSpec(&pod.Spec, sidecar, postgresContainerName, injectPostgresVolumeMounts)
 }
 
@@ -87,7 +87,7 @@ func InjectPluginSidecarPodSpec(
 	injectMainContainerVolumes bool,
 ) error {
 	sidecar = sidecar.DeepCopy()
-	InjectPluginVolumePodSpec(spec)
+	InjectPluginVolumePodSpec(spec, mainContainerName)
 
 	var volumeMounts []corev1.VolumeMount
 	sidecarContainerFound := false

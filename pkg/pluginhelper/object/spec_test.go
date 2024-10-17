@@ -23,7 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("InjectPluginVolume", func() {
+var _ = Describe("InjectIntoPostgresPluginVolume", func() {
 	Context("when the pod does not have the plugin volume", func() {
 		It("should inject the plugin volume and mount", func() {
 			pod := &corev1.Pod{
@@ -35,7 +35,7 @@ var _ = Describe("InjectPluginVolume", func() {
 					},
 				},
 			}
-			InjectPluginVolume(pod)
+			InjectIntoPostgresPluginVolume(pod)
 			Expect(pod.Spec.Volumes).To(HaveLen(1))
 			Expect(pod.Spec.Volumes[0].Name).To(Equal(pluginVolumeName))
 			Expect(pod.Spec.Containers[0].VolumeMounts).To(HaveLen(1))
@@ -66,7 +66,7 @@ var _ = Describe("InjectPluginVolume", func() {
 					},
 				},
 			}
-			InjectPluginVolume(pod)
+			InjectIntoPostgresPluginVolume(pod)
 			Expect(pod.Spec.Volumes).To(HaveLen(1))
 			Expect(pod.Spec.Containers[0].VolumeMounts).To(HaveLen(1))
 		})
@@ -86,7 +86,7 @@ var _ = Describe("InjectPluginVolume", func() {
 					},
 				},
 			}
-			InjectPluginVolume(pod)
+			InjectIntoPostgresPluginVolume(pod)
 			Expect(pod.Spec.Volumes).To(HaveLen(1))
 			Expect(pod.Spec.Volumes[0].Name).To(Equal(pluginVolumeName))
 			Expect(pod.Spec.Containers[0].VolumeMounts).To(HaveLen(1))
@@ -97,7 +97,7 @@ var _ = Describe("InjectPluginVolume", func() {
 	})
 })
 
-var _ = Describe("InjectPostgresPluginSidecar", func() {
+var _ = Describe("InjectSidecarIntoPostgres", func() {
 	var sidecar *corev1.Container
 
 	BeforeEach(func() {
@@ -118,13 +118,13 @@ var _ = Describe("InjectPostgresPluginSidecar", func() {
 		}
 
 		It("will fail if we need to inject the volume mounts", func() {
-			err := InjectPostgresPluginSidecar(pod, sidecar, true)
+			err := InjectSidecarIntoPostgres(pod, sidecar, true)
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(Equal(ErrNoMainContainerFound))
 		})
 
 		It("will fail if we don't need to inject the volume mounts", func() {
-			err := InjectPostgresPluginSidecar(pod, sidecar, false)
+			err := InjectSidecarIntoPostgres(pod, sidecar, false)
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(Equal(ErrNoMainContainerFound))
 		})
@@ -153,7 +153,7 @@ var _ = Describe("InjectPostgresPluginSidecar", func() {
 
 		When("the PG volume mounts injection is requested", func() {
 			It("it will inherit the volume mounts and the plugin volume", func() {
-				err := InjectPostgresPluginSidecar(pod, sidecar, true)
+				err := InjectSidecarIntoPostgres(pod, sidecar, true)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(pod.Spec.Containers).To(HaveLen(2))
 				Expect(pod.Spec.Containers[1].Name).To(Equal(sidecar.Name))
@@ -168,7 +168,7 @@ var _ = Describe("InjectPostgresPluginSidecar", func() {
 
 		When("the PG volume mounts is set to not be inherited", func() {
 			It("it will not inherit the volume mounts", func() {
-				err := InjectPostgresPluginSidecar(pod, sidecar, false)
+				err := InjectSidecarIntoPostgres(pod, sidecar, false)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(pod.Spec.Containers).To(HaveLen(2))
 				Expect(pod.Spec.Containers[0].Name).To(Equal(postgresContainerName))
