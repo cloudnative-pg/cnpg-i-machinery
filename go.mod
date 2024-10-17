@@ -1,13 +1,13 @@
 module github.com/cloudnative-pg/cnpg-i-machinery
 
-go 1.22.0
+go 1.23
 
 toolchain go1.23.2
 
 require (
-	github.com/cloudnative-pg/api v0.0.0-20241004125129-98baa9f4957b
-	github.com/cloudnative-pg/cnpg-i v0.0.0-20240820123829-5844b833f4eb
-	github.com/cloudnative-pg/machinery v0.0.0-20241001153943-0e5ba4f9a0e1
+	github.com/cloudnative-pg/api v0.0.0-20241017081401-248d52ef7771
+	github.com/cloudnative-pg/cnpg-i v0.0.0-20241016132832-8d61352831c6
+	github.com/cloudnative-pg/machinery v0.0.0-20241014090714-c27747f9974b
 	github.com/go-logr/logr v1.4.2
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.1.0
 	github.com/onsi/ginkgo/v2 v2.20.2
@@ -15,7 +15,7 @@ require (
 	github.com/snorwin/jsonpatch v1.5.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	google.golang.org/grpc v1.65.0
+	google.golang.org/grpc v1.67.1
 	k8s.io/api v0.31.1
 	k8s.io/apimachinery v0.31.1
 	sigs.k8s.io/controller-runtime v0.19.0
@@ -57,7 +57,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.75.2 // indirect
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.77.1 // indirect
 	github.com/prometheus/client_golang v1.20.3 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.59.1 // indirect
@@ -73,16 +73,16 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0 // indirect
-	golang.org/x/net v0.29.0 // indirect
+	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
-	golang.org/x/sys v0.25.0 // indirect
-	golang.org/x/term v0.24.0 // indirect
-	golang.org/x/text v0.18.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
+	golang.org/x/term v0.25.0 // indirect
+	golang.org/x/text v0.19.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
 	golang.org/x/tools v0.25.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240814211410-ddb44dafa142 // indirect
-	google.golang.org/protobuf v1.34.2 // indirect
+	google.golang.org/protobuf v1.35.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
