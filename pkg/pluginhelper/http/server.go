@@ -24,10 +24,8 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"os/signal"
 	"path"
 	"path/filepath"
-	"syscall"
 
 	"github.com/cloudnative-pg/cnpg-i/pkg/identity"
 	"github.com/cloudnative-pg/machinery/pkg/log"
@@ -169,9 +167,6 @@ func (s *Server) Start(ctx context.Context) error {
 		return fmt.Errorf("cannot listen on the socket: %w", err)
 	}
 
-	// Handle quit-like signal
-	s.handleSignals(ctx, listener)
-
 	// Create GRPC server
 	serverOptions := []grpc.ServerOption{
 		grpc.ChainUnaryInterceptor(
@@ -217,6 +212,12 @@ func (s *Server) Start(ctx context.Context) error {
 		"displayName", pluginDisplayName,
 		"version", pluginVersion,
 	)
+
+	go func() {
+		<-ctx.Done()
+		grpcServer.Stop()
+	}()
+
 	if err = grpcServer.Serve(listener); !errors.Is(err, net.ErrClosed) {
 		logger.Error(err, "While terminating server")
 	}
@@ -381,25 +382,4 @@ func (s *Server) removeStaleSocket(ctx context.Context, pluginPath string) error
 	default:
 		return fmt.Errorf("error while checking for stale socket: %w", err)
 	}
-}
-
-// handleSignals makes sure that we close the listening socket
-// when we receive a quit-like signal.
-func (s *Server) handleSignals(ctx context.Context, listener net.Listener) {
-	logger := log.FromContext(ctx)
-
-	sigc := make(chan os.Signal, 1)
-	signal.Notify(sigc, syscall.SIGTERM, syscall.SIGABRT, syscall.SIGINT)
-	go func(c chan os.Signal) {
-		sig := <-c
-		logger.Info(
-			"Caught signal, shutting down.",
-			"signal", sig.String())
-
-		if err := listener.Close(); err != nil {
-			logger.Error(err, "While stopping server")
-		}
-
-		os.Exit(1)
-	}(sigc)
 }
