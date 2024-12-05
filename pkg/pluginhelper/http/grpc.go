@@ -23,6 +23,16 @@ import (
 	"google.golang.org/grpc"
 )
 
+// LoggedError is implemented by errors that can be logged with
+// a stacktrace or not.
+// If an error does not implement this interface, the stack trace
+// will always be logged.
+type LoggedError interface {
+	// ShouldPrintStackTrace should return true when the error should
+	// be logged with its stack trace.
+	ShouldPrintStackTrace() bool
+}
+
 // loggingUnaryServerInterceptor injects the passed logger into the gRPC call context for all inbound unary calls.
 //
 // Works around go-grpc's lack of a WithContext option to set a root context.
@@ -48,11 +58,13 @@ func logFailedRequestsUnaryServerInterceptor(logger log.Logger) grpc.UnaryServer
 	) (interface{}, error) {
 		result, err := handler(ctx, req)
 		if err != nil {
-			logger.Error(
-				err,
-				"Error while handling GRPC request",
-				"info", info,
-			)
+			if loggedError, ok := err.(LoggedError); !ok || loggedError.ShouldPrintStackTrace() {
+				logger.Error(
+					err,
+					"Error while handling GRPC request",
+					"info", info,
+				)
+			}
 		}
 
 		return result, err
