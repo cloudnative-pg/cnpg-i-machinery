@@ -5,20 +5,20 @@ go 1.22.0
 toolchain go1.23.4
 
 require (
-	github.com/cloudnative-pg/api v0.0.0-20241004125129-98baa9f4957b
-	github.com/cloudnative-pg/cnpg-i v0.0.0-20240820123829-5844b833f4eb
-	github.com/cloudnative-pg/machinery v0.0.0-20241001153943-0e5ba4f9a0e1
+	github.com/cloudnative-pg/api 35098e945596
+	github.com/cloudnative-pg/cnpg-i cbc4287931ee
+	github.com/cloudnative-pg/machinery 3910a89a1a69
 	github.com/go-logr/logr v1.4.2
-	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.1.0
-	github.com/onsi/ginkgo/v2 v2.20.2
-	github.com/onsi/gomega v1.34.2
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.2.0
+	github.com/onsi/ginkgo/v2 v2.22.0
+	github.com/onsi/gomega v1.36.1
 	github.com/snorwin/jsonpatch v1.5.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	google.golang.org/grpc v1.65.0
-	k8s.io/api v0.31.1
-	k8s.io/apimachinery v0.31.1
-	sigs.k8s.io/controller-runtime v0.19.0
+	google.golang.org/grpc v1.69.2
+	k8s.io/api v0.32.0
+	k8s.io/apimachinery v0.32.0
+	sigs.k8s.io/controller-runtime v0.19.3
 )
 
 require (
