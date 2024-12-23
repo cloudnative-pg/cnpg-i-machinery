@@ -28,7 +28,7 @@ var _ = Describe("NewPlugin", func() {
 		It("should initialize the plugin with the correct parameters", func() {
 			cluster := apiv1.Cluster{
 				Spec: apiv1.ClusterSpec{
-					Plugins: apiv1.PluginConfigurationList{
+					Plugins: []apiv1.PluginConfiguration{
 						{
 							Name: "test-plugin",
 							Parameters: map[string]string{
@@ -48,7 +48,7 @@ var _ = Describe("NewPlugin", func() {
 		It("should initialize the plugin with PluginIndex set to -1", func() {
 			cluster := apiv1.Cluster{
 				Spec: apiv1.ClusterSpec{
-					Plugins: apiv1.PluginConfigurationList{},
+					Plugins: []apiv1.PluginConfiguration{},
 				},
 			}
 			plugin := NewPlugin(cluster, "non-existent-plugin")
@@ -61,7 +61,7 @@ var _ = Describe("NewPlugin", func() {
 		It("should initialize the correct plugin based on the name", func() {
 			cluster := apiv1.Cluster{
 				Spec: apiv1.ClusterSpec{
-					Plugins: apiv1.PluginConfigurationList{
+					Plugins: []apiv1.PluginConfiguration{
 						{
 							Name: "plugin1",
 							Parameters: map[string]string{
