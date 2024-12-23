@@ -6,8 +6,8 @@ github.com/cloudnative-pg/api v1.25.0 h1:jLrHUq9Ye52+YC9I0Cj4VAFdmaKCLKmUrF9zxgb
 github.com/cloudnative-pg/api v1.25.0/go.mod h1:49gdjFO7/fcZWjO/Ohh8DPO7UN6oivRDpN3vgulZohY=
 github.com/cloudnative-pg/barman-cloud v0.0.0-20241218093921-134c7de4954a h1:VrEa9P/HfA6csNOh0DRlUyeUoKuByV57tLnf2rTIqfU=
 github.com/cloudnative-pg/barman-cloud v0.0.0-20241218093921-134c7de4954a/go.mod h1:HPGwXHlatQEnb2HdsbGTZLEo8qlxKLdxTHiTeF9TTqw=
-github.com/cloudnative-pg/cnpg-i v0.0.0-20241218212131-cbc4287931ee h1:PJc4BpPu0b684BrwWzy0B5W/CSqrnUV+jv3PTrSUx8g=
-github.com/cloudnative-pg/cnpg-i v0.0.0-20241218212131-cbc4287931ee/go.mod h1:ahVFn+JzYkFfv7Iwpswu4lsuC9yK7zZupM1ssaIKPFI=
+github.com/cloudnative-pg/cnpg-i v0.0.0-20241223173829-bc221c3954e3 h1:0QavZ7xSwloQbD/Ctm9rGKObBUJjSr9mXGdJ1Sk9QGQ=
+github.com/cloudnative-pg/cnpg-i v0.0.0-20241223173829-bc221c3954e3/go.mod h1:wmXfeji9qPPW+F/1OgDHdkI97ISN1I2f8vJKv/7sssY=
 github.com/cloudnative-pg/machinery v0.0.0-20241223154527-66cd032ef607 h1:Jymgt/H6iNoUZCqF6YtOqE2GgQIM1e1tWjT42B6vPJs=
 github.com/cloudnative-pg/machinery v0.0.0-20241223154527-66cd032ef607/go.mod h1:n6br6GuNXcwYI5SgRArt9rM2hgZ1ElZr4vkJCWfiC/U=
 github.com/cpuguy83/go-md2man/v2 v2.0.4/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
@@ -213,8 +213,8 @@ google.golang.org/genproto/googleapis/rpc v0.0.0-20241015192408-796eee8c2d53 h1:
 google.golang.org/genproto/googleapis/rpc v0.0.0-20241015192408-796eee8c2d53/go.mod h1:GX3210XPVPUjJbTUbvwI8f2IpZDMZuPJWDzDuebbviI=
 google.golang.org/grpc v1.69.2 h1:U3S9QEtbXC0bYNvRtcoklF3xGtLViumSYxWykJS+7AU=
 google.golang.org/grpc v1.69.2/go.mod h1:vyjdE6jLBI76dgpDojsFGNaHlxdjXN9ghpnd2o7JGZ4=
-google.golang.org/protobuf v1.36.0 h1:mjIs9gYtt56AzC4ZaffQuh88TZurBGhIJMBZGSxNerQ=
-google.golang.org/protobuf v1.36.0/go.mod h1:9fA7Ob0pmnwhb644+1+CVWFRbNajQ6iRojtC/QF5bRE=
+google.golang.org/protobuf v1.36.1 h1:yBPeRvTftaleIgM3PZ/WBIZ7XM/eEYAaEyCwvyjq/gk=
+google.golang.org/protobuf v1.36.1/go.mod h1:9fA7Ob0pmnwhb644+1+CVWFRbNajQ6iRojtC/QF5bRE=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c h1:Hei/4ADfdWqJk1ZMxUNpqntNwaWcugrBjAiHlqqRiVk=
 gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c/go.mod h1:JHkPIbrfpd72SG/EVd6muEfDQjcINNoR0C8j2r3qZ4Q=
