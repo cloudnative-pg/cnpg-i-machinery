@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.23.4
 
 require (
-	github.com/cloudnative-pg/api v0.0.0-20241223102100-f6c896163b47
+	github.com/cloudnative-pg/api v1.25.0
 	github.com/cloudnative-pg/cnpg-i v0.0.0-20241218212131-cbc4287931ee
 	github.com/cloudnative-pg/machinery v0.0.0-20241219132510-3910a89a1a69
 	github.com/go-logr/logr v1.4.2
