@@ -6,7 +6,7 @@ toolchain go1.23.4
 
 require (
 	github.com/cloudnative-pg/api v1.25.0
-	github.com/cloudnative-pg/cnpg-i v0.0.0-20241218212131-cbc4287931ee
+	github.com/cloudnative-pg/cnpg-i v0.0.0-20241223173829-bc221c3954e3
 	github.com/cloudnative-pg/machinery v0.0.0-20241223154527-66cd032ef607
 	github.com/go-logr/logr v1.4.2
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.2.0
@@ -80,7 +80,7 @@ require (
 	golang.org/x/tools v0.28.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241015192408-796eee8c2d53 // indirect
-	google.golang.org/protobuf v1.36.0 // indirect
+	google.golang.org/protobuf v1.36.1 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
