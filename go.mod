@@ -6,7 +6,7 @@ toolchain go1.23.5
 
 require (
 	github.com/cloudnative-pg/api v1.25.0
-	github.com/cloudnative-pg/cnpg-i v0.0.0-20250124134517-3fc0e5299ed3
+	github.com/cloudnative-pg/cnpg-i v0.0.0-20250204215249-5e401229b0de
 	github.com/cloudnative-pg/machinery v0.0.0-20250124134709-2553c239f2c8
 	github.com/go-logr/logr v1.4.2
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.2.0
