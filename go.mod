@@ -1,11 +1,11 @@
 module github.com/cloudnative-pg/cnpg-i-machinery
 
-go 1.23.0
+go 1.23.5
 
 toolchain go1.24.0
 
 require (
-	github.com/cloudnative-pg/api v1.25.0
+	github.com/cloudnative-pg/api v1.25.1-0.20250226213915-ee16af9707c5
 	github.com/cloudnative-pg/cnpg-i v0.1.0
 	github.com/cloudnative-pg/machinery v0.1.0
 	github.com/go-logr/logr v1.4.2
@@ -24,7 +24,7 @@ require (
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/cloudnative-pg/barman-cloud v0.0.0-20241218093921-134c7de4954a // indirect
+	github.com/cloudnative-pg/barman-cloud v0.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/emicklei/go-restful/v3 v3.12.1 // indirect
 	github.com/evanphx/json-patch/v5 v5.9.11 // indirect
@@ -56,7 +56,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.79.2 // indirect
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.80.1 // indirect
 	github.com/prometheus/client_golang v1.20.3 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.59.1 // indirect

@@ -23,8 +23,8 @@ import (
 
 func getClusterGVK() schema.GroupVersionKind {
 	return schema.GroupVersionKind{
-		Group:   apiv1.GroupVersion.Group,
-		Version: apiv1.GroupVersion.Version,
+		Group:   apiv1.SchemeGroupVersion.Group,
+		Version: apiv1.SchemeGroupVersion.Version,
 		Kind:    apiv1.ClusterKind,
 	}
 }
