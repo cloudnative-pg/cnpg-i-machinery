@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/cloudnative-pg/cnpg-i-machinery/compare/v0.1.1...v0.1.2) (2025-02-27)
+
+
+### Bug Fixes
+
+* **deps:** set cloudnative-pg API version to latest ([#144](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/144)) ([2de477f](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/2de477fe4caa1bc95ea91b89e14b513cf879f099))
+
 ## [0.1.1](https://github.com/cloudnative-pg/cnpg-i-machinery/compare/v0.1.0...v0.1.1) (2025-02-27)
 
 
