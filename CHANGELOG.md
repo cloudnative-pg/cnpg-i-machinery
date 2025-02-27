@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/cloudnative-pg/cnpg-i-machinery/compare/v0.1.0...v0.1.1) (2025-02-27)
+
+
+### Bug Fixes
+
+* **deps:** downgrade go-grpc-middleware/v2 to v2.2.0 ([#139](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/139)) ([f02364a](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/f02364aea613e0cd8b32bf2bc237ef17d0acdcc1))
+
 ## 0.1.0 (2025-02-26)
 
 
