@@ -36,10 +36,19 @@ func (e *WrongObjectTypeError) Error() string {
 	return fmt.Sprintf("received wrong GVK '%v' expected '%v'", e.receivedGVK.String(), e.expectedGVK.String())
 }
 
-// DecodeObject decodes a JSON representation of an object.
-func DecodeObject(objectJSON []byte, object runtime.Object, expectedGVK schema.GroupVersionKind) error {
+// DecodeObjectLenient decodes a JSON representation of an object.
+func DecodeObjectLenient(objectJSON []byte, object runtime.Object) error {
 	if err := json.Unmarshal(objectJSON, object); err != nil {
 		return fmt.Errorf("error unmarshalling object JSON: %w", err)
+	}
+
+	return nil
+}
+
+// DecodeObjectStrict decodes a JSON representation of an object.
+func DecodeObjectStrict(objectJSON []byte, object runtime.Object, expectedGVK schema.GroupVersionKind) error {
+	if err := DecodeObjectLenient(objectJSON, object); err != nil {
+		return err
 	}
 
 	if object.GetObjectKind().GroupVersionKind() != expectedGVK {

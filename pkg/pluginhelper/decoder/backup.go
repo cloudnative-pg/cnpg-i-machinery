@@ -29,11 +29,22 @@ func getBackupGVK() schema.GroupVersionKind {
 	}
 }
 
-// DecodeBackup decodes a JSON representation of a backup.
-func DecodeBackup(backupDefinition []byte) (*apiv1.Backup, error) {
+// DecodeBackupLenient decodes a JSON representation of a backup.
+func DecodeBackupLenient(backupDefinition []byte) (*apiv1.Backup, error) {
 	var backup apiv1.Backup
 
-	if err := DecodeObject(backupDefinition, &backup, getBackupGVK()); err != nil {
+	if err := DecodeObjectLenient(backupDefinition, &backup); err != nil {
+		return nil, err
+	}
+
+	return &backup, nil
+}
+
+// DecodeBackupStrict decodes a JSON representation of a backup.
+func DecodeBackupStrict(backupDefinition []byte) (*apiv1.Backup, error) {
+	var backup apiv1.Backup
+
+	if err := DecodeObjectStrict(backupDefinition, &backup, getBackupGVK()); err != nil {
 		return nil, err
 	}
 

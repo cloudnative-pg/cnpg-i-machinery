@@ -33,7 +33,7 @@ func getPodGVK() schema.GroupVersionKind {
 func DecodePodJSON(podJSON []byte) (*corev1.Pod, error) {
 	var result corev1.Pod
 
-	if err := DecodeObject(podJSON, &result, getPodGVK()); err != nil {
+	if err := DecodeObjectStrict(podJSON, &result, getPodGVK()); err != nil {
 		return nil, err
 	}
 

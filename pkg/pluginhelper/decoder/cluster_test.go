@@ -25,7 +25,7 @@ var _ = Describe("Decode Functions", func() {
 	DescribeTable(
 		"Decode Functions",
 		func(clusterJSON []byte, succeeds bool) {
-			cluster, err := DecodeClusterJSON(clusterJSON)
+			cluster, err := DecodeClusterStrict(clusterJSON)
 			if !succeeds {
 				Expect(err).To(HaveOccurred())
 				return

@@ -28,7 +28,7 @@ var _ = Describe("Generic decoder", func() {
 		"Generic decoder",
 		func(objectJSON []byte, succeeds bool) {
 			var pod corev1.Pod
-			err := DecodeObject(objectJSON, &pod, getPodGVK())
+			err := DecodeObjectStrict(objectJSON, &pod, getPodGVK())
 			if !succeeds {
 				Expect(err).To(HaveOccurred())
 				return
