@@ -28,14 +28,14 @@ var _ = Describe("DecodeBackup", func() {
 	DescribeTable(
 		"DecodeBackup",
 		func(backupJSON []byte, expected *v1.Backup, succeeds bool) {
-			backup, err := DecodeBackup(backupJSON)
-			if err != nil {
-				Expect(succeeds).To(BeFalse())
-			} else {
-				Expect(succeeds).To(BeTrue())
+			backup, err := DecodeBackupStrict(backupJSON)
+			if !succeeds {
+				Expect(err).To(HaveOccurred())
+				return
 			}
 
 			Expect(backup).To(Equal(expected))
+			Expect(backup.GroupVersionKind()).To(Equal(getBackupGVK()))
 		},
 		Entry(
 			"when the backup JSON is valid",

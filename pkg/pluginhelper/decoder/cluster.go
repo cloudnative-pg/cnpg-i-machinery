@@ -29,11 +29,22 @@ func getClusterGVK() schema.GroupVersionKind {
 	}
 }
 
-// DecodeClusterJSON decodes a JSON representation of a cluster.
-func DecodeClusterJSON(clusterJSON []byte) (*apiv1.Cluster, error) {
+// DecodeClusterLenient decodes a JSON representation of a cluster.
+func DecodeClusterLenient(clusterJSON []byte) (*apiv1.Cluster, error) {
 	var result apiv1.Cluster
 
-	if err := DecodeObject(clusterJSON, &result, getClusterGVK()); err != nil {
+	if err := DecodeObjectLenient(clusterJSON, &result); err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+// DecodeClusterStrict decodes a JSON representation of a cluster.
+func DecodeClusterStrict(clusterJSON []byte) (*apiv1.Cluster, error) {
+	var result apiv1.Cluster
+
+	if err := DecodeObjectStrict(clusterJSON, &result, getClusterGVK()); err != nil {
 		return nil, err
 	}
 
