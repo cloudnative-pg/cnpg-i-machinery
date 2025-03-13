@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/cloudnative-pg/cnpg-i-machinery/compare/v0.1.2...v0.2.0) (2025-03-13)
+
+
+### Features
+
+* configurable decoder of CNPG resources, lenient and strict ([#149](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/149)) ([6e06857](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/6e0685758c8d564facbc0d0386e151509f5910bb))
+
 ## [0.1.2](https://github.com/cloudnative-pg/cnpg-i-machinery/compare/v0.1.1...v0.1.2) (2025-02-27)
 
 
