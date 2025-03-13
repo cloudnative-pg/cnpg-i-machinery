@@ -9,16 +9,16 @@ require (
 	github.com/cloudnative-pg/cnpg-i v0.1.0
 	github.com/cloudnative-pg/machinery v0.1.0
 	github.com/go-logr/logr v1.4.2
-	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.2.0
-	github.com/onsi/ginkgo/v2 v2.22.2
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.1
+	github.com/onsi/ginkgo/v2 v2.23.0
 	github.com/onsi/gomega v1.36.2
 	github.com/snorwin/jsonpatch v1.5.0
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.19.0
-	google.golang.org/grpc v1.70.0
-	k8s.io/api v0.32.2
-	k8s.io/apimachinery v0.32.2
-	sigs.k8s.io/controller-runtime v0.20.2
+	google.golang.org/grpc v1.71.0
+	k8s.io/api v0.32.3
+	k8s.io/apimachinery v0.32.3
+	sigs.k8s.io/controller-runtime v0.20.3
 )
 
 require (
@@ -73,15 +73,15 @@ require (
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0 // indirect
 	golang.org/x/net v0.36.0 // indirect
-	golang.org/x/oauth2 v0.24.0 // indirect
+	golang.org/x/oauth2 v0.25.0 // indirect
 	golang.org/x/sync v0.11.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/term v0.29.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/time v0.7.0 // indirect
-	golang.org/x/tools v0.28.0 // indirect
+	golang.org/x/tools v0.30.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20241202173237-19429a94021a // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250115164207-1a7da9e5054f // indirect
 	google.golang.org/protobuf v1.36.5 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
