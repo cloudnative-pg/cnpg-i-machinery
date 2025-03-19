@@ -10,7 +10,7 @@ require (
 	github.com/cloudnative-pg/machinery v0.1.0
 	github.com/go-logr/logr v1.4.2
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.1
-	github.com/onsi/ginkgo/v2 v2.23.0
+	github.com/onsi/ginkgo/v2 v2.23.1
 	github.com/onsi/gomega v1.36.2
 	github.com/snorwin/jsonpatch v1.5.0
 	github.com/spf13/cobra v1.9.1
