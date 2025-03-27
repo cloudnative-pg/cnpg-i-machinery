@@ -92,10 +92,11 @@ func InjectPluginSidecarSpec(spec *corev1.PodSpec, sidecar *corev1.Container, in
 	sidecarContainerFound := false
 	postgresContainerFound := false
 	for i := range spec.Containers {
-		if spec.Containers[i].Name == postgresContainerName {
+		switch spec.Containers[i].Name {
+		case postgresContainerName:
 			volumeMounts = spec.Containers[i].VolumeMounts
 			postgresContainerFound = true
-		} else if spec.Containers[i].Name == sidecar.Name {
+		case sidecar.Name:
 			sidecarContainerFound = true
 		}
 	}
