@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.1](https://github.com/cloudnative-pg/cnpg-i-machinery/compare/v0.2.0...v0.2.1) (2025-03-28)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major go dependencies ([#140](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/140)) ([1626c16](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/1626c16d54b6b311475d0d44cbfd1a1604d884d3))
+* **deps:** update all non-major go dependencies ([#158](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/158)) ([6a3bad8](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/6a3bad87d20506e8249fcd7e2e5113a46e29ba46))
+* **deps:** update module github.com/onsi/ginkgo/v2 to v2.23.1 ([#157](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/157)) ([4431fd1](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/4431fd1a5701c9b88eadb4de4b57a318cff0a514))
+
 ## [0.2.0](https://github.com/cloudnative-pg/cnpg-i-machinery/compare/v0.1.2...v0.2.0) (2025-03-13)
 
 
