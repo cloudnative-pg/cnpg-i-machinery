@@ -62,7 +62,7 @@ func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnri
 		Use: "serve",
 		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
 			_, err := logr.FromContext(cmd.Context())
-			if err == nil {
+			if err != nil {
 				// caller did not supply a logger, inject one
 				flags := log.NewFlags(zap.Options{Development: viper.GetBool("debug")})
 				flags.ConfigureLogging()
