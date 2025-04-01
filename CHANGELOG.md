@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/cloudnative-pg/cnpg-i-machinery/compare/v0.2.1...v0.2.2) (2025-04-01)
+
+
+### Bug Fixes
+
+* logging setup in http.CreateMainCmd ([#169](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/169)) ([251db26](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/251db268655d5f00433c68480a7c2fce40c32479))
+
 ## [0.2.1](https://github.com/cloudnative-pg/cnpg-i-machinery/compare/v0.2.0...v0.2.1) (2025-03-28)
 
 
