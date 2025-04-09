@@ -85,9 +85,7 @@ var _ = Describe("BuildTLSConfig", func() {
 		Expect(tlsConfig.ClientCAs.Subjects()).ToNot(BeEmpty()) //nolint: staticcheck
 		Expect(tlsConfig.MinVersion).To(Equal(uint16(tls.VersionTLS13)))
 
-		cert, err := tlsConfig.GetCertificate(&tls.ClientHelloInfo{
-			ServerName: "localhost",
-		})
+		cert, err := tlsConfig.GetCertificate(nil)
 		Expect(err).Error().NotTo(HaveOccurred())
 		Expect(cert).NotTo(BeNil())
 	})
