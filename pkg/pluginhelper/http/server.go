@@ -279,7 +279,7 @@ func (s *Server) buildTLSConfig(ctx context.Context) (*tls.Config, error) {
 
 	return &tls.Config{
 		ClientAuth: tls.RequireAndVerifyClientCert,
-		GetCertificate: func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
+		GetCertificate: func(_ *tls.ClientHelloInfo) (*tls.Certificate, error) {
 			cert, err := tls.LoadX509KeyPair(s.ServerCertPath, s.ServerKeyPath)
 			if err != nil {
 				logger.Error(err, "failed to load server key pair")
