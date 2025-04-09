@@ -266,12 +266,6 @@ func (s *Server) buildTLSConfig(ctx context.Context) (*tls.Config, error) {
 		"clientCertPath", s.ClientCertPath,
 	)
 
-	cert, err := tls.LoadX509KeyPair(s.ServerCertPath, s.ServerKeyPath)
-	if err != nil {
-		logger.Error(err, "failed to load server key pair")
-		return nil, fmt.Errorf("failed to load server key pair: %w", err)
-	}
-
 	caCertPool := x509.NewCertPool()
 	caBytes, err := os.ReadFile(filepath.Clean(s.ClientCertPath))
 	if err != nil {
@@ -284,10 +278,18 @@ func (s *Server) buildTLSConfig(ctx context.Context) (*tls.Config, error) {
 	}
 
 	return &tls.Config{
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		Certificates: []tls.Certificate{cert},
-		ClientCAs:    caCertPool,
-		MinVersion:   tls.VersionTLS13,
+		ClientAuth: tls.RequireAndVerifyClientCert,
+		GetCertificate: func(_ *tls.ClientHelloInfo) (*tls.Certificate, error) {
+			cert, err := tls.LoadX509KeyPair(s.ServerCertPath, s.ServerKeyPath)
+			if err != nil {
+				logger.Error(err, "failed to load server key pair")
+				return nil, fmt.Errorf("failed to load server key pair: %w", err)
+			}
+
+			return &cert, nil
+		},
+		ClientCAs:  caCertPool,
+		MinVersion: tls.VersionTLS13,
 	}, nil
 }
 

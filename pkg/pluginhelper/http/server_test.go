@@ -81,8 +81,12 @@ var _ = Describe("BuildTLSConfig", func() {
 		tlsConfig, err := server.buildTLSConfig(ctx)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(tlsConfig).ToNot(BeNil())
-		Expect(tlsConfig.Certificates).To(HaveLen(1))
+		Expect(tlsConfig.GetCertificate).ToNot(BeNil())
 		Expect(tlsConfig.ClientCAs.Subjects()).ToNot(BeEmpty()) //nolint: staticcheck
 		Expect(tlsConfig.MinVersion).To(Equal(uint16(tls.VersionTLS13)))
+
+		cert, err := tlsConfig.GetCertificate(nil)
+		Expect(err).Error().NotTo(HaveOccurred())
+		Expect(cert).NotTo(BeNil())
 	})
 })
