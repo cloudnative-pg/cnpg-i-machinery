@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.3.0](https://github.com/cloudnative-pg/cnpg-i-machinery/compare/v0.2.1...v0.3.0) (2025-04-17)
+
+
+### Features
+
+* reload ssl cert to allow zero downtime rotation ([#174](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/174)) ([063997e](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/063997e162673e44439671aa4653715f424fa30e))
+
+
+### Bug Fixes
+
+* **deps:** downgrade github.com/grpc-ecosystem/go-grpc-middleware/v2 to v2.2.0 ([#179](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/179)) ([94ce92a](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/94ce92ab204379750d0a055f6b20df742e124520)), closes [#178](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/178)
+* **deps:** update all non-major go dependencies ([#170](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/170)) ([3c6e63f](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/3c6e63f539a0c0fbd3f3c394d8fdb97f0c422af3))
+* **deps:** update all non-major go dependencies ([#180](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/180)) ([cf9800a](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/cf9800a72f3b734ba2079be964ad479f40106bd6))
+* logging setup in http.CreateMainCmd ([#169](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/169)) ([251db26](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/251db268655d5f00433c68480a7c2fce40c32479))
+
 ## [0.2.1](https://github.com/cloudnative-pg/cnpg-i-machinery/compare/v0.2.0...v0.2.1) (2025-03-28)
 
 
