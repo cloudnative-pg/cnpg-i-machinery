@@ -15,9 +15,9 @@ require (
 	github.com/snorwin/jsonpatch v1.5.0
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
-	google.golang.org/grpc v1.72.0
-	k8s.io/api v0.33.0
-	k8s.io/apimachinery v0.33.0
+	google.golang.org/grpc v1.72.1
+	k8s.io/api v0.33.1
+	k8s.io/apimachinery v0.33.1
 	sigs.k8s.io/controller-runtime v0.20.4
 )
 
