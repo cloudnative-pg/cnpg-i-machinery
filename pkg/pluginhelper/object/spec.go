@@ -74,6 +74,9 @@ func InjectPluginVolumeSpec(spec *corev1.PodSpec) {
 }
 
 // InjectPluginSidecar refer to InjectPluginSidecarSpec.
+//
+// Deprecated: Kubernetes versions >= 1.29 support sidecars as InitContainers by default,
+// so this function should not be used anymore. Use InjectPluginInitContainerSidecarSpec instead.
 func InjectPluginSidecar(pod *corev1.Pod, sidecar *corev1.Container, injectPostgresVolumeMounts bool) error {
 	return InjectPluginSidecarSpec(&pod.Spec, sidecar, injectPostgresVolumeMounts)
 }
@@ -94,6 +97,9 @@ func InjectPluginSidecarInitContainer(pod *corev1.Pod,
 //
 // Besides the value of "injectPostgresVolumeMount", the plugin volume
 // will always be injected in the PostgreSQL container.
+//
+// Deprecated: Kubernetes versions >= 1.29 support sidecars as InitContainers by default,
+// so this function should not be used anymore. Use InjectPluginInitContainerSidecarSpec instead.
 func InjectPluginSidecarSpec(spec *corev1.PodSpec, sidecar *corev1.Container, injectPostgresVolumeMounts bool) error {
 	return injectSidecar(spec, sidecar, injectPostgresVolumeMounts, false)
 }
