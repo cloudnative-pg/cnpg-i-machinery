@@ -18,8 +18,10 @@ package object
 
 import (
 	"errors"
+	"slices"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/utils/ptr"
 )
 
 const (
@@ -76,6 +78,14 @@ func InjectPluginSidecar(pod *corev1.Pod, sidecar *corev1.Container, injectPostg
 	return InjectPluginSidecarSpec(&pod.Spec, sidecar, injectPostgresVolumeMounts)
 }
 
+// InjectPluginSidecarInitContainer refer to InjectPluginSidecarInitContainerSpec.
+func InjectPluginSidecarInitContainer(pod *corev1.Pod,
+	sidecar *corev1.Container,
+	injectPostgresVolumeMounts bool,
+) error {
+	return InjectPluginInitContainerSidecarSpec(&pod.Spec, sidecar, injectPostgresVolumeMounts)
+}
+
 // InjectPluginSidecarSpec injects a plugin sidecar into a CNPG Pod spec.
 //
 // If the "injectPostgresVolumeMount" flag is true, this will append all the volume
@@ -85,36 +95,76 @@ func InjectPluginSidecar(pod *corev1.Pod, sidecar *corev1.Container, injectPostg
 // Besides the value of "injectPostgresVolumeMount", the plugin volume
 // will always be injected in the PostgreSQL container.
 func InjectPluginSidecarSpec(spec *corev1.PodSpec, sidecar *corev1.Container, injectPostgresVolumeMounts bool) error {
+	return injectSidecar(spec, sidecar, injectPostgresVolumeMounts, false)
+}
+
+// InjectPluginInitContainerSidecarSpec injects a plugin sidecar into a CNPG Pod spec as
+// an InitContainer. This requires the SidecarContainers feature gate to be enabled, which is
+// the default for kubernetes versions >= 1.29.
+//
+// If the "injectPostgresVolumeMount" flag is true, this will append all the volume
+// mounts that are used in the instance manager Pod to the passed sidecar
+// container, granting it superuser access to the PostgreSQL instance.
+//
+// Besides the value of "injectPostgresVolumeMount", the plugin volume
+// will always be injected in the PostgreSQL container.
+func InjectPluginInitContainerSidecarSpec(
+	spec *corev1.PodSpec, sidecar *corev1.Container, injectPostgresVolumeMounts bool,
+) error {
+	return injectSidecar(spec, sidecar, injectPostgresVolumeMounts, true)
+}
+
+func injectSidecar(spec *corev1.PodSpec,
+	sidecar *corev1.Container,
+	injectPostgresVolumeMounts bool,
+	injectAsInitContainer bool,
+) error {
+	if spec == nil || sidecar == nil {
+		return nil
+	}
 	sidecar = sidecar.DeepCopy()
 	InjectPluginVolumeSpec(spec)
 
 	var volumeMounts []corev1.VolumeMount
-	sidecarContainerFound := false
 	postgresContainerFound := false
 	for i := range spec.Containers {
-		switch spec.Containers[i].Name {
-		case postgresContainerName:
+		if spec.Containers[i].Name == postgresContainerName {
 			volumeMounts = spec.Containers[i].VolumeMounts
 			postgresContainerFound = true
-		case sidecar.Name:
-			sidecarContainerFound = true
+			break
 		}
-	}
-
-	if sidecarContainerFound {
-		// The sidecar container was already added
-		return nil
 	}
 
 	if !postgresContainerFound {
 		return ErrNoPostgresContainerFound
 	}
 
+	var targetContainers *[]corev1.Container
+	if injectAsInitContainer {
+		if spec.InitContainers == nil {
+			spec.InitContainers = make([]corev1.Container, 0, 1)
+		}
+		targetContainers = &spec.InitContainers
+		sidecar.RestartPolicy = ptr.To(corev1.ContainerRestartPolicyAlways)
+	} else {
+		targetContainers = &spec.Containers
+	}
+
+	sidecarContainerFound := slices.ContainsFunc(*targetContainers, func(container corev1.Container) bool {
+		return container.Name == sidecar.Name
+	})
+
+	if sidecarContainerFound {
+		// The sidecar container was already added
+		return nil
+	}
+
 	// Do not modify the passed sidecar definition
 	if injectPostgresVolumeMounts {
 		sidecar.VolumeMounts = append(sidecar.VolumeMounts, volumeMounts...)
 	}
-	spec.Containers = append(spec.Containers, *sidecar)
+
+	*targetContainers = append(*targetContainers, *sidecar)
 
 	return nil
 }
