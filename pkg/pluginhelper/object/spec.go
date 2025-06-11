@@ -18,7 +18,6 @@ package object
 
 import (
 	"errors"
-	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/ptr"
@@ -31,9 +30,14 @@ const (
 	postgresContainerName = "postgres"
 )
 
-// ErrNoPostgresContainerFound is raised when there's no PostgreSQL container
-// in the passed instance Pod.
-var ErrNoPostgresContainerFound = errors.New("no postgres container into instance Pod")
+var (
+	// ErrNoPostgresContainerFound is raised when there's no PostgreSQL container
+	// in the passed instance Pod.
+	ErrNoPostgresContainerFound = errors.New("no postgres container into instance Pod")
+
+	// ErrNilPodPassed is raised when a nil Pod is passed to a function requiring it.
+	ErrNilPodPassed = errors.New("nil pod passed")
+)
 
 // InjectPluginVolume injects the plugin volume into a CNPG Pod.
 func InjectPluginVolume(pod *corev1.Pod) {
@@ -79,7 +83,7 @@ func InjectPluginVolumeSpec(spec *corev1.PodSpec) {
 // so this function should not be used anymore. Use InjectPluginInitContainerSidecarSpec instead.
 func InjectPluginSidecar(pod *corev1.Pod, sidecar *corev1.Container, injectPostgresVolumeMounts bool) error {
 	if pod == nil {
-		return fmt.Errorf("nil pod passed to InjectPluginSidecar")
+		return ErrNilPodPassed
 	}
 
 	return InjectPluginSidecarSpec(&pod.Spec, sidecar, injectPostgresVolumeMounts)
@@ -91,7 +95,7 @@ func InjectPluginSidecarInitContainer(pod *corev1.Pod,
 	injectPostgresVolumeMounts bool,
 ) error {
 	if pod == nil {
-		return fmt.Errorf("nil pod passed to InjectPluginSidecarInitContainer")
+		return ErrNilPodPassed
 	}
 
 	return InjectPluginInitContainerSidecarSpec(&pod.Spec, sidecar, injectPostgresVolumeMounts)
@@ -112,6 +116,7 @@ func InjectPluginSidecarSpec(spec *corev1.PodSpec, sidecar *corev1.Container, in
 	fetcher := func(spec *corev1.PodSpec, _ *corev1.Container) *[]corev1.Container {
 		return &spec.Containers
 	}
+
 	return injectSidecar(spec, sidecar, injectPostgresVolumeMounts, fetcher)
 }
 
@@ -138,6 +143,7 @@ func InjectPluginInitContainerSidecarSpec(
 
 		return &spec.InitContainers
 	}
+
 	return injectSidecar(spec, sidecar, injectPostgresVolumeMounts, fetcher)
 }
 
