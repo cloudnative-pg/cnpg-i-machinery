@@ -183,3 +183,67 @@ var _ = Describe("InjectPluginSidecar", func() {
 		})
 	})
 })
+
+var _ = Describe("InjectPluginSidecarInitContainer", func() {
+	var sidecar *corev1.Container
+
+	BeforeEach(func() {
+		sidecar = &corev1.Container{
+			Name: "pluginname",
+		}
+	})
+
+	When("the passed Pod have a 'postgres' container", func() {
+		var pod *corev1.Pod
+
+		BeforeEach(func() {
+			pod = &corev1.Pod{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name: postgresContainerName,
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "pgdata",
+									MountPath: "/pgdata",
+								},
+							},
+						},
+					},
+				},
+			}
+		})
+
+		When("the PG volume mounts injection is requested", func() {
+			It("it will inherit the volume mounts and the plugin volume", func() {
+				err := InjectPluginSidecarInitContainer(pod, sidecar, true)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(pod.Spec.InitContainers).To(HaveLen(1))
+				Expect(pod.Spec.InitContainers[0].Name).To(Equal(sidecar.Name))
+				Expect(*pod.Spec.InitContainers[0].RestartPolicy).To(Equal(corev1.ContainerRestartPolicyAlways))
+
+				// the plugin volume have been injected
+				Expect(pod.Spec.Containers[0].VolumeMounts).To(HaveLen(2))
+
+				// even in the sidecar
+				Expect(pod.Spec.InitContainers[0].VolumeMounts).To(HaveLen(2))
+			})
+		})
+
+		When("the PG volume mounts is set to not be inherited", func() {
+			It("it will not inherit the volume mounts", func() {
+				err := InjectPluginSidecarInitContainer(pod, sidecar, false)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(pod.Spec.InitContainers).To(HaveLen(1))
+				Expect(pod.Spec.Containers[0].Name).To(Equal(postgresContainerName))
+				Expect(pod.Spec.InitContainers[0].Name).To(Equal(sidecar.Name))
+
+				// the plugin volume have been injected
+				Expect(pod.Spec.Containers[0].VolumeMounts).To(HaveLen(2))
+
+				// even in the sidecar
+				Expect(pod.Spec.InitContainers[0].VolumeMounts).To(BeEmpty())
+			})
+		})
+	})
+})
