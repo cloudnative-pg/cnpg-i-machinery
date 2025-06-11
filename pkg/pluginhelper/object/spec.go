@@ -18,7 +18,7 @@ package object
 
 import (
 	"errors"
-	"slices"
+	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/ptr"
@@ -78,6 +78,10 @@ func InjectPluginVolumeSpec(spec *corev1.PodSpec) {
 // Deprecated: Kubernetes versions >= 1.29 support sidecars as InitContainers by default,
 // so this function should not be used anymore. Use InjectPluginInitContainerSidecarSpec instead.
 func InjectPluginSidecar(pod *corev1.Pod, sidecar *corev1.Container, injectPostgresVolumeMounts bool) error {
+	if pod == nil {
+		return fmt.Errorf("nil pod passed to InjectPluginSidecar")
+	}
+
 	return InjectPluginSidecarSpec(&pod.Spec, sidecar, injectPostgresVolumeMounts)
 }
 
@@ -86,6 +90,10 @@ func InjectPluginSidecarInitContainer(pod *corev1.Pod,
 	sidecar *corev1.Container,
 	injectPostgresVolumeMounts bool,
 ) error {
+	if pod == nil {
+		return fmt.Errorf("nil pod passed to InjectPluginSidecarInitContainer")
+	}
+
 	return InjectPluginInitContainerSidecarSpec(&pod.Spec, sidecar, injectPostgresVolumeMounts)
 }
 
@@ -101,7 +109,10 @@ func InjectPluginSidecarInitContainer(pod *corev1.Pod,
 // Deprecated: Kubernetes versions >= 1.29 support sidecars as InitContainers by default,
 // so this function should not be used anymore. Use InjectPluginInitContainerSidecarSpec instead.
 func InjectPluginSidecarSpec(spec *corev1.PodSpec, sidecar *corev1.Container, injectPostgresVolumeMounts bool) error {
-	return injectSidecar(spec, sidecar, injectPostgresVolumeMounts, false)
+	fetcher := func(spec *corev1.PodSpec, _ *corev1.Container) *[]corev1.Container {
+		return &spec.Containers
+	}
+	return injectSidecar(spec, sidecar, injectPostgresVolumeMounts, fetcher)
 }
 
 // InjectPluginInitContainerSidecarSpec injects a plugin sidecar into a CNPG Pod spec as
@@ -117,60 +128,61 @@ func InjectPluginSidecarSpec(spec *corev1.PodSpec, sidecar *corev1.Container, in
 func InjectPluginInitContainerSidecarSpec(
 	spec *corev1.PodSpec, sidecar *corev1.Container, injectPostgresVolumeMounts bool,
 ) error {
-	return injectSidecar(spec, sidecar, injectPostgresVolumeMounts, true)
+	fetcher := func(spec *corev1.PodSpec, sidecar *corev1.Container) *[]corev1.Container {
+		// ensure the sidecar has the correct restartPolicy
+		sidecar.RestartPolicy = ptr.To(corev1.ContainerRestartPolicyAlways)
+
+		if spec.InitContainers == nil {
+			spec.InitContainers = []corev1.Container{}
+		}
+
+		return &spec.InitContainers
+	}
+	return injectSidecar(spec, sidecar, injectPostgresVolumeMounts, fetcher)
 }
 
-func injectSidecar(spec *corev1.PodSpec,
+func injectSidecar(
+	spec *corev1.PodSpec,
 	sidecar *corev1.Container,
 	injectPostgresVolumeMounts bool,
-	injectAsInitContainer bool,
+	containerFetcher func(spec *corev1.PodSpec, sidecar *corev1.Container) *[]corev1.Container,
 ) error {
 	if spec == nil || sidecar == nil {
 		return nil
 	}
-	sidecar = sidecar.DeepCopy()
+
+	modifiedSidecar := sidecar.DeepCopy()
 	InjectPluginVolumeSpec(spec)
 
-	var volumeMounts []corev1.VolumeMount
-	postgresContainerFound := false
-	for i := range spec.Containers {
-		if spec.Containers[i].Name == postgresContainerName {
-			volumeMounts = spec.Containers[i].VolumeMounts
-			postgresContainerFound = true
-			break
+	// Find PostgreSQL container and its volume mounts
+	volumeMounts, err := getPostgresVolumeMounts(spec)
+	if err != nil {
+		return err
+	}
+
+	targetContainers := containerFetcher(spec, modifiedSidecar)
+
+	for _, container := range *targetContainers {
+		if container.Name == modifiedSidecar.Name {
+			return nil
 		}
 	}
 
-	if !postgresContainerFound {
-		return ErrNoPostgresContainerFound
-	}
-
-	var targetContainers *[]corev1.Container
-	if injectAsInitContainer {
-		if spec.InitContainers == nil {
-			spec.InitContainers = make([]corev1.Container, 0, 1)
-		}
-		targetContainers = &spec.InitContainers
-		sidecar.RestartPolicy = ptr.To(corev1.ContainerRestartPolicyAlways)
-	} else {
-		targetContainers = &spec.Containers
-	}
-
-	sidecarContainerFound := slices.ContainsFunc(*targetContainers, func(container corev1.Container) bool {
-		return container.Name == sidecar.Name
-	})
-
-	if sidecarContainerFound {
-		// The sidecar container was already added
-		return nil
-	}
-
-	// Do not modify the passed sidecar definition
 	if injectPostgresVolumeMounts {
-		sidecar.VolumeMounts = append(sidecar.VolumeMounts, volumeMounts...)
+		modifiedSidecar.VolumeMounts = append(modifiedSidecar.VolumeMounts, volumeMounts...)
 	}
 
-	*targetContainers = append(*targetContainers, *sidecar)
+	*targetContainers = append(*targetContainers, *modifiedSidecar)
 
 	return nil
+}
+
+func getPostgresVolumeMounts(spec *corev1.PodSpec) ([]corev1.VolumeMount, error) {
+	for _, container := range spec.Containers {
+		if container.Name == postgresContainerName {
+			return container.VolumeMounts, nil
+		}
+	}
+
+	return nil, ErrNoPostgresContainerFound
 }
