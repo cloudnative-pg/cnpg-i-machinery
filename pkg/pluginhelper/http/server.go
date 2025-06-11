@@ -25,7 +25,8 @@ import (
 	"net"
 	"os"
 	"path"
-	"path/filepath"
+	"sync"
+	"time"
 
 	"github.com/cloudnative-pg/cnpg-i/pkg/identity"
 	"github.com/cloudnative-pg/machinery/pkg/log"
@@ -148,6 +149,91 @@ type Server struct {
 	PluginPath string
 }
 
+// TLSConfigManager manages dynamic TLS configuration
+type TLSConfigManager struct {
+	mu            sync.RWMutex
+	serverCert    string
+	serverKey     string
+	clientCAFile  string
+	currentConfig *tls.Config
+}
+
+// newTLSConfigManager creates a new TLS config manager
+func (s *Server) newTLSConfigManager(certFile, keyFile, caFile string) (*TLSConfigManager, error) {
+	manager := &TLSConfigManager{
+		serverCert:   certFile,
+		serverKey:    keyFile,
+		clientCAFile: caFile,
+	}
+
+	// Load initial configuration
+	if err := manager.reload(); err != nil {
+		return nil, err
+	}
+
+	return manager, nil
+}
+
+// reload loads the TLS configuration from files
+func (m *TLSConfigManager) reload() error {
+	// Load server certificate
+	cert, err := tls.LoadX509KeyPair(m.serverCert, m.serverKey)
+	if err != nil {
+		return fmt.Errorf("failed to load server cert: %v", err)
+	}
+
+	// Load client CA
+	clientCACert, err := os.ReadFile(m.clientCAFile)
+	if err != nil {
+		return fmt.Errorf("failed to read client CA: %v", err)
+	}
+
+	clientCAs := x509.NewCertPool()
+	if !clientCAs.AppendCertsFromPEM(clientCACert) {
+		return fmt.Errorf("failed to parse client CA")
+	}
+
+	// Create new TLS config
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientCAs:    clientCAs,
+	}
+
+	// Update the configuration atomically
+	m.mu.Lock()
+	m.currentConfig = tlsConfig
+	m.mu.Unlock()
+
+	log.Info("TLS configuration reloaded successfully")
+	return nil
+}
+
+// GetConfigForConnection returns the current TLS configuration
+// This is called for each new connection
+func (m *TLSConfigManager) GetConfigForConnection(hello *tls.ClientHelloInfo) (*tls.Config, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.currentConfig.Clone(), nil
+}
+
+// Watch monitors for configuration changes and reloads
+func (m *TLSConfigManager) Watch(ctx context.Context, interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if err := m.reload(); err != nil {
+				log.Error(err, "Failed to reload TLS config")
+			}
+		}
+	}
+}
+
 // Start starts the server.
 func (s *Server) Start(ctx context.Context) error {
 	logger := log.FromContext(ctx)
@@ -248,49 +334,28 @@ func (s *Server) setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) 
 		return nil, errNoClientCert
 	}
 
-	tlsConfig, err := s.buildTLSConfig(ctx)
+	// Initialize TLS config manager
+	tlsManager, err := s.newTLSConfigManager(
+		s.ServerCertPath,
+		s.ServerKeyPath,
+		s.ClientCertPath,
+	)
 	if err != nil {
-		return nil, err
+		logger.Error(err, "Error initializing TLS manager")
 	}
+
+	// Start watching for configuration changes
+	go tlsManager.Watch(ctx, 30*time.Second) // Check every 30 seconds
+
+	// Create dynamic TLS credentials
+	creds := credentials.NewTLS(&tls.Config{
+		GetConfigForClient: tlsManager.GetConfigForConnection,
+	})
 
 	logger.Info("Set up TLS authentication")
-	result := grpc.Creds(credentials.NewTLS(tlsConfig))
+	result := grpc.Creds(creds)
 
 	return &result, nil
-}
-
-func (s *Server) buildTLSConfig(ctx context.Context) (*tls.Config, error) {
-	logger := log.FromContext(ctx).WithValues(
-		"serverCertPath", s.ServerCertPath,
-		"serverKeyPath", s.ServerKeyPath,
-		"clientCertPath", s.ClientCertPath,
-	)
-
-	caCertPool := x509.NewCertPool()
-	caBytes, err := os.ReadFile(filepath.Clean(s.ClientCertPath))
-	if err != nil {
-		logger.Error(err, "failed to read client public key")
-		return nil, fmt.Errorf("failed to read client public key: %w", err)
-	}
-	if ok := caCertPool.AppendCertsFromPEM(caBytes); !ok {
-		logger.Error(err, "failed to parse client public key")
-		return nil, fmt.Errorf("failed to parse client public key: %w", err)
-	}
-
-	return &tls.Config{
-		ClientAuth: tls.RequireAndVerifyClientCert,
-		GetCertificate: func(_ *tls.ClientHelloInfo) (*tls.Certificate, error) {
-			cert, err := tls.LoadX509KeyPair(s.ServerCertPath, s.ServerKeyPath)
-			if err != nil {
-				logger.Error(err, "failed to load server key pair")
-				return nil, fmt.Errorf("failed to load server key pair: %w", err)
-			}
-
-			return &cert, nil
-		},
-		ClientCAs:  caCertPool,
-		MinVersion: tls.VersionTLS13,
-	}, nil
 }
 
 func (s *Server) createListener(

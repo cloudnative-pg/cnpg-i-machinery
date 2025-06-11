@@ -78,8 +78,10 @@ var _ = Describe("BuildTLSConfig", func() {
 	})
 
 	It("should successfully create a TLS config", func(ctx SpecContext) {
-		tlsConfig, err := server.buildTLSConfig(ctx)
+		tlsConfigManager, err := server.newTLSConfigManager(server.ServerCertPath, server.ServerKeyPath, server.ClientCertPath)
 		Expect(err).ToNot(HaveOccurred())
+		Expect(tlsConfigManager).ToNot(BeNil())
+		tlsConfig := tlsConfigManager.currentConfig
 		Expect(tlsConfig).ToNot(BeNil())
 		Expect(tlsConfig.GetCertificate).ToNot(BeNil())
 		Expect(tlsConfig.ClientCAs.Subjects()).ToNot(BeEmpty()) //nolint: staticcheck
