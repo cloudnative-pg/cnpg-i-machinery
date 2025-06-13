@@ -266,17 +266,6 @@ func (s *Server) buildTLSConfig(ctx context.Context) (*tls.Config, error) {
 		"clientCertPath", s.ClientCertPath,
 	)
 
-	caCertPool := x509.NewCertPool()
-	caBytes, err := os.ReadFile(filepath.Clean(s.ClientCertPath))
-	if err != nil {
-		logger.Error(err, "failed to read client public key")
-		return nil, fmt.Errorf("failed to read client public key: %w", err)
-	}
-	if ok := caCertPool.AppendCertsFromPEM(caBytes); !ok {
-		logger.Error(err, "failed to parse client public key")
-		return nil, fmt.Errorf("failed to parse client public key: %w", err)
-	}
-
 	return &tls.Config{
 		ClientAuth: tls.RequireAndVerifyClientCert,
 		GetCertificate: func(_ *tls.ClientHelloInfo) (*tls.Certificate, error) {
@@ -285,11 +274,36 @@ func (s *Server) buildTLSConfig(ctx context.Context) (*tls.Config, error) {
 				logger.Error(err, "failed to load server key pair")
 				return nil, fmt.Errorf("failed to load server key pair: %w", err)
 			}
-
 			return &cert, nil
 		},
-		ClientCAs:  caCertPool,
-		MinVersion: tls.VersionTLS13,
+		VerifyPeerCertificate: func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
+			caCertPool := x509.NewCertPool()
+			caBytes, err := os.ReadFile(filepath.Clean(s.ClientCertPath))
+			if err != nil {
+				logger.Error(err, "failed to read client public key")
+				return fmt.Errorf("failed to read client public key: %w", err)
+			}
+			if ok := caCertPool.AppendCertsFromPEM(caBytes); !ok {
+				logger.Error(err, "failed to parse client public key")
+				return fmt.Errorf("failed to parse client public key: %w", err)
+			}
+			// Parse the server certificate
+			certs := make([]*x509.Certificate, len(rawCerts))
+			for i, asn1Data := range rawCerts {
+				cert, err := x509.ParseCertificate(asn1Data)
+				if err != nil {
+					return fmt.Errorf("failed to parse server certificate: %w", err)
+				}
+				certs[i] = cert
+			}
+			opts := x509.VerifyOptions{
+				Roots: caCertPool,
+			}
+			_, err = certs[0].Verify(opts)
+			return err
+		},
+		InsecureSkipVerify: true, // Required to use VerifyPeerCertificate
+		MinVersion:         tls.VersionTLS13,
 	}, nil
 }
 
