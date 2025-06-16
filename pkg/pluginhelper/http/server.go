@@ -19,13 +19,12 @@ package http
 import (
 	"context"
 	"crypto/tls"
-	"crypto/x509"
 	"errors"
 	"fmt"
 	"net"
 	"os"
 	"path"
-	"path/filepath"
+	"time"
 
 	"github.com/cloudnative-pg/cnpg-i/pkg/identity"
 	"github.com/cloudnative-pg/machinery/pkg/log"
@@ -74,13 +73,14 @@ func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnri
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			srv := &Server{
-				IdentityImpl:   identityImpl,
-				Enrichers:      enrichers,
-				ServerCertPath: viper.GetString("server-cert"),
-				ServerKeyPath:  viper.GetString("server-key"),
-				ClientCertPath: viper.GetString("client-cert"),
-				ServerAddress:  viper.GetString("server-address"),
-				PluginPath:     viper.GetString("plugin-path"),
+				IdentityImpl:      identityImpl,
+				Enrichers:         enrichers,
+				ServerCertPath:    viper.GetString("server-cert"),
+				ServerKeyPath:     viper.GetString("server-key"),
+				ClientCertPath:    viper.GetString("client-cert"),
+				ServerAddress:     viper.GetString("server-address"),
+				PluginPath:        viper.GetString("plugin-path"),
+				TLSReloadInterval: viper.GetDuration("tls-reload-interval"),
 			}
 
 			return srv.Start(cmd.Context())
@@ -129,6 +129,13 @@ func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnri
 	)
 	_ = viper.BindPFlag("server-address", cmd.Flags().Lookup("server-address"))
 
+	cmd.Flags().Duration(
+		"tls-reload-interval",
+		0*time.Second,
+		"Interval for reloading TLS certificates (e.g., 30s, 1m). Set to 0 to disable reload.",
+	)
+	_ = viper.BindPFlag("tls-reload-interval", cmd.Flags().Lookup("tls-reload-interval"))
+
 	cmd.MarkFlagsRequiredTogether("server-cert", "server-key", "client-cert", "server-address")
 	cmd.MarkFlagsMutuallyExclusive("server-cert", "plugin-path")
 
@@ -146,6 +153,8 @@ type Server struct {
 	ServerAddress string
 	// mutually exclusive with serverAddress
 	PluginPath string
+	// TLS reload interval
+	TLSReloadInterval time.Duration
 }
 
 // Start starts the server.
@@ -234,6 +243,7 @@ func (s *Server) setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) 
 		"serverCertPath", s.ServerCertPath,
 		"serverKeyPath", s.ServerKeyPath,
 		"clientCertPath", s.ClientCertPath,
+		"tlsReloadInterval", s.TLSReloadInterval,
 	)
 
 	if s.ServerCertPath == "" {
@@ -248,49 +258,33 @@ func (s *Server) setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) 
 		return nil, errNoClientCert
 	}
 
-	tlsConfig, err := s.buildTLSConfig(ctx)
+	// Initialize TLS config manager
+	tlsManager, err := newTLSConfigManager(
+		s.ServerCertPath,
+		s.ServerKeyPath,
+		s.ClientCertPath,
+	)
 	if err != nil {
-		return nil, err
+		logger.Error(err, "Error initializing TLS manager")
 	}
+
+	// Start watching for configuration changes
+	interval := s.TLSReloadInterval
+	if interval > 0 {
+		go tlsManager.Watch(ctx, interval)
+	}
+
+	// Create dynamic TLS credentials
+	creds := credentials.NewTLS(&tls.Config{
+		ClientAuth:         tls.RequireAndVerifyClientCert,
+		MinVersion:         tls.VersionTLS13,
+		GetConfigForClient: tlsManager.GetConfigForConnection,
+	})
 
 	logger.Info("Set up TLS authentication")
-	result := grpc.Creds(credentials.NewTLS(tlsConfig))
+	result := grpc.Creds(creds)
 
 	return &result, nil
-}
-
-func (s *Server) buildTLSConfig(ctx context.Context) (*tls.Config, error) {
-	logger := log.FromContext(ctx).WithValues(
-		"serverCertPath", s.ServerCertPath,
-		"serverKeyPath", s.ServerKeyPath,
-		"clientCertPath", s.ClientCertPath,
-	)
-
-	caCertPool := x509.NewCertPool()
-	caBytes, err := os.ReadFile(filepath.Clean(s.ClientCertPath))
-	if err != nil {
-		logger.Error(err, "failed to read client public key")
-		return nil, fmt.Errorf("failed to read client public key: %w", err)
-	}
-	if ok := caCertPool.AppendCertsFromPEM(caBytes); !ok {
-		logger.Error(err, "failed to parse client public key")
-		return nil, fmt.Errorf("failed to parse client public key: %w", err)
-	}
-
-	return &tls.Config{
-		ClientAuth: tls.RequireAndVerifyClientCert,
-		GetCertificate: func(_ *tls.ClientHelloInfo) (*tls.Certificate, error) {
-			cert, err := tls.LoadX509KeyPair(s.ServerCertPath, s.ServerKeyPath)
-			if err != nil {
-				logger.Error(err, "failed to load server key pair")
-				return nil, fmt.Errorf("failed to load server key pair: %w", err)
-			}
-
-			return &cert, nil
-		},
-		ClientCAs:  caCertPool,
-		MinVersion: tls.VersionTLS13,
-	}, nil
 }
 
 func (s *Server) createListener(
