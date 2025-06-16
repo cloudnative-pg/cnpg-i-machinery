@@ -1,4 +1,4 @@
-module github.com/hh24k/cnpg-i-machinery
+module github.com/cloudnative-pg/cnpg-i-machinery
 
 go 1.24.0
 
