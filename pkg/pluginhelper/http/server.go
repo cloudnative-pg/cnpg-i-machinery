@@ -364,6 +364,8 @@ func (s *Server) setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) 
 
 	// Create dynamic TLS credentials
 	creds := credentials.NewTLS(&tls.Config{
+		ClientAuth:         tls.RequireAndVerifyClientCert,
+		MinVersion:         tls.VersionTLS13,
 		GetConfigForClient: tlsManager.GetConfigForConnection,
 	})
 
