@@ -24,10 +24,10 @@ import (
 	"net"
 	"os"
 	"path"
-	"time"
 
 	"github.com/cloudnative-pg/cnpg-i/pkg/identity"
 	"github.com/cloudnative-pg/machinery/pkg/log"
+	"github.com/fsnotify/fsnotify"
 	"github.com/go-logr/logr"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/spf13/cobra"
@@ -73,14 +73,13 @@ func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnri
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			srv := &Server{
-				IdentityImpl:      identityImpl,
-				Enrichers:         enrichers,
-				ServerCertPath:    viper.GetString("server-cert"),
-				ServerKeyPath:     viper.GetString("server-key"),
-				ClientCertPath:    viper.GetString("client-cert"),
-				ServerAddress:     viper.GetString("server-address"),
-				PluginPath:        viper.GetString("plugin-path"),
-				TLSReloadInterval: viper.GetDuration("tls-reload-interval"),
+				IdentityImpl:   identityImpl,
+				Enrichers:      enrichers,
+				ServerCertPath: viper.GetString("server-cert"),
+				ServerKeyPath:  viper.GetString("server-key"),
+				ClientCertPath: viper.GetString("client-cert"),
+				ServerAddress:  viper.GetString("server-address"),
+				PluginPath:     viper.GetString("plugin-path"),
 			}
 
 			return srv.Start(cmd.Context())
@@ -129,13 +128,6 @@ func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnri
 	)
 	_ = viper.BindPFlag("server-address", cmd.Flags().Lookup("server-address"))
 
-	cmd.Flags().Duration(
-		"tls-reload-interval",
-		0*time.Second,
-		"Interval for reloading TLS certificates (e.g., 30s, 1m). Set to 0 to disable reload.",
-	)
-	_ = viper.BindPFlag("tls-reload-interval", cmd.Flags().Lookup("tls-reload-interval"))
-
 	cmd.MarkFlagsRequiredTogether("server-cert", "server-key", "client-cert", "server-address")
 	cmd.MarkFlagsMutuallyExclusive("server-cert", "plugin-path")
 
@@ -153,8 +145,6 @@ type Server struct {
 	ServerAddress string
 	// mutually exclusive with serverAddress
 	PluginPath string
-	// TLS reload interval
-	TLSReloadInterval time.Duration
 }
 
 // Start starts the server.
@@ -243,7 +233,6 @@ func (s *Server) setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) 
 		"serverCertPath", s.ServerCertPath,
 		"serverKeyPath", s.ServerKeyPath,
 		"clientCertPath", s.ClientCertPath,
-		"tlsReloadInterval", s.TLSReloadInterval,
 	)
 
 	if s.ServerCertPath == "" {
@@ -266,19 +255,21 @@ func (s *Server) setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) 
 	)
 	if err != nil {
 		logger.Error(err, "Error initializing TLS manager")
+		return nil, err
 	}
 
-	// Start watching for configuration changes
-	interval := s.TLSReloadInterval
-	if interval > 0 {
-		go tlsManager.Watch(ctx, interval)
+	// Set up certificate file watcher using fsnotify
+	err = s.setupCertificateWatcher(ctx, tlsManager, logger)
+	if err != nil {
+		// Log the error but don't fail - certificate watching is optional
+		logger.Error(err, "Failed to setup certificate file watcher, continuing without it")
 	}
 
 	// Create dynamic TLS credentials
 	creds := credentials.NewTLS(&tls.Config{
+		GetConfigForClient: tlsManager.GetConfigForConnection,
 		ClientAuth:         tls.RequireAndVerifyClientCert,
 		MinVersion:         tls.VersionTLS13,
-		GetConfigForClient: tlsManager.GetConfigForConnection,
 	})
 
 	logger.Info("Set up TLS authentication")
@@ -378,4 +369,66 @@ func (s *Server) removeStaleSocket(ctx context.Context, pluginPath string) error
 	default:
 		return fmt.Errorf("error while checking for stale socket: %w", err)
 	}
+}
+
+func (s *Server) setupCertificateWatcher(ctx context.Context, tlsManager *TLSConfigManager, logger log.Logger) error {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return fmt.Errorf("failed to create file watcher: %w", err)
+	}
+
+	// Add certificate files to watcher
+	if err = watcher.Add(s.ServerCertPath); err != nil {
+		watcher.Close()
+		return fmt.Errorf("failed to watch server cert file %s: %w", s.ServerCertPath, err)
+	}
+
+	if err = watcher.Add(s.ServerKeyPath); err != nil {
+		watcher.Close()
+		return fmt.Errorf("failed to watch server key file %s: %w", s.ServerKeyPath, err)
+	}
+
+	if err = watcher.Add(s.ClientCertPath); err != nil {
+		watcher.Close()
+		return fmt.Errorf("failed to watch client cert file %s: %w", s.ClientCertPath, err)
+	}
+
+	// Start watching for file changes in a goroutine
+	go func() {
+		defer watcher.Close()
+		for {
+			select {
+			case <-ctx.Done():
+				logger.Info("Certificate watcher shutting down")
+				return
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
+				}
+				logger.Debug("File system event detected", "event", event.String())
+				// Check for write, create, or remove events on our certificate files
+				opNeedsReload := fsnotify.Write | fsnotify.Create | fsnotify.Remove
+				if event.Has(opNeedsReload) &&
+					(event.Name == s.ServerCertPath || event.Name == s.ServerKeyPath || event.Name == s.ClientCertPath) {
+					logger.Info("Certificate file changed, reloading TLS config", "file", event.Name)
+					if err := tlsManager.Reload(); err != nil {
+						logger.Error(err, "Failed to reload TLS config after file change")
+					} else {
+						logger.Info("TLS certificates reloaded successfully after file change")
+					}
+				}
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					return
+				}
+				logger.Error(err, "File watcher error")
+			}
+		}
+	}()
+
+	logger.Info("Certificate file watcher setup successfully",
+		"serverCert", s.ServerCertPath,
+		"serverKey", s.ServerKeyPath,
+		"clientCert", s.ClientCertPath)
+	return nil
 }

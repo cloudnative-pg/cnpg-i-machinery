@@ -17,14 +17,12 @@ limitations under the License.
 package http
 
 import (
-	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
-	"time"
 
 	"github.com/cloudnative-pg/machinery/pkg/log"
 )
@@ -47,37 +45,38 @@ func newTLSConfigManager(certFile, keyFile, caFile string) (*TLSConfigManager, e
 	}
 
 	// Load initial configuration
-	if err := manager.reload(); err != nil {
+	if err := manager.load(); err != nil {
 		return nil, err
 	}
 
 	return manager, nil
 }
 
-// reload loads the TLS configuration from files
-func (m *TLSConfigManager) reload() error {
+// load loads the TLS configuration from files
+func (m *TLSConfigManager) load() error {
 	// Load server certificate
 	cert, err := tls.LoadX509KeyPair(m.serverCert, m.serverKey)
 	if err != nil {
-		return fmt.Errorf("failed to load server cert: %v", err)
+		return fmt.Errorf("failed to load server cert from %s and %s: %w", m.serverCert, m.serverKey, err)
 	}
 
 	// Load client CA
 	clientCACert, err := os.ReadFile(filepath.Clean(m.clientCAFile))
 	if err != nil {
-		return fmt.Errorf("failed to read client CA: %v", err)
+		return fmt.Errorf("failed to read client CA from %s: %w", m.clientCAFile, err)
 	}
 
 	clientCAs := x509.NewCertPool()
 	if !clientCAs.AppendCertsFromPEM(clientCACert) {
-		return fmt.Errorf("failed to parse client CA")
+		return fmt.Errorf("failed to parse client CA from %s", m.clientCAFile)
 	}
 
 	// Create new TLS config
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{cert},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
 		ClientCAs:    clientCAs,
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		MinVersion:   tls.VersionTLS13,
 	}
 
 	// Update the configuration atomically
@@ -85,8 +84,16 @@ func (m *TLSConfigManager) reload() error {
 	m.currentConfig = tlsConfig
 	m.mu.Unlock()
 
-	log.Info("TLS configuration reloaded successfully")
+	log.Info("TLS configuration loaded successfully",
+		"serverCert", m.serverCert,
+		"serverKey", m.serverKey,
+		"clientCA", m.clientCAFile)
 	return nil
+}
+
+// Reload reloads the TLS configuration from files (public method)
+func (m *TLSConfigManager) Reload() error {
+	return m.load()
 }
 
 // GetConfigForConnection returns the current TLS configuration
@@ -95,21 +102,4 @@ func (m *TLSConfigManager) GetConfigForConnection(_ *tls.ClientHelloInfo) (*tls.
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return m.currentConfig.Clone(), nil
-}
-
-// Watch monitors for configuration changes and reloads
-func (m *TLSConfigManager) Watch(ctx context.Context, interval time.Duration) {
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			if err := m.reload(); err != nil {
-				log.Error(err, "Failed to reload TLS config")
-			}
-		}
-	}
 }
