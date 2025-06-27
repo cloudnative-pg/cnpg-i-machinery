@@ -78,16 +78,45 @@ var _ = Describe("BuildTLSConfig", func() {
 	})
 
 	It("should successfully create a TLS config", func(ctx SpecContext) {
-		tlsConfigManager, err := newTLSConfigManager(server.ServerCertPath, server.ServerKeyPath, server.ClientCertPath)
+		// Test the load-on-demand TLS config loading
+		tlsConfig, err := server.loadTLSConfigForConnection(nil)
 		Expect(err).ToNot(HaveOccurred())
-		Expect(tlsConfigManager).ToNot(BeNil())
-		tlsConfig := tlsConfigManager.currentConfig
 		Expect(tlsConfig).ToNot(BeNil())
-		Expect(tlsConfigManager.load()).Should(Succeed())
+
+		// Verify TLS configuration properties
 		Expect(tlsConfig.ClientCAs.Subjects()).ToNot(BeEmpty()) //nolint: staticcheck
 		Expect(tlsConfig.MinVersion).To(Equal(uint16(tls.VersionTLS13)))
-		connectionConfig, err := tlsConfigManager.GetConfigForConnection(nil)
-		Expect(err).Error().NotTo(HaveOccurred())
-		Expect(connectionConfig).NotTo(BeNil())
+		Expect(tlsConfig.ClientAuth).To(Equal(tls.RequireAndVerifyClientCert))
+		Expect(tlsConfig.Certificates).To(HaveLen(1))
+
+		// Test that calling it multiple times works (load fresh each time)
+		tlsConfig2, err := server.loadTLSConfigForConnection(nil)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(tlsConfig2).ToNot(BeNil())
+		Expect(tlsConfig2.MinVersion).To(Equal(uint16(tls.VersionTLS13)))
+	})
+
+	It("should handle missing certificate files gracefully", func(ctx SpecContext) {
+		// Test with non-existent server cert
+		invalidServer := Server{
+			ServerCertPath: "/non/existent/cert.pem",
+			ServerKeyPath:  server.ServerKeyPath,
+			ClientCertPath: server.ClientCertPath,
+		}
+
+		_, err := invalidServer.loadTLSConfigForConnection(nil)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("failed to load server cert"))
+
+		// Test with non-existent client cert
+		invalidServer2 := Server{
+			ServerCertPath: server.ServerCertPath,
+			ServerKeyPath:  server.ServerKeyPath,
+			ClientCertPath: "/non/existent/client.pem",
+		}
+
+		_, err = invalidServer2.loadTLSConfigForConnection(nil)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("failed to read client CA"))
 	})
 })

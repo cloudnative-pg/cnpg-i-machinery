@@ -19,15 +19,16 @@ package http
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"net"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/cloudnative-pg/cnpg-i/pkg/identity"
 	"github.com/cloudnative-pg/machinery/pkg/log"
-	"github.com/fsnotify/fsnotify"
 	"github.com/go-logr/logr"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/spf13/cobra"
@@ -247,35 +248,51 @@ func (s *Server) setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) 
 		return nil, errNoClientCert
 	}
 
-	// Initialize TLS config manager
-	tlsManager, err := newTLSConfigManager(
-		s.ServerCertPath,
-		s.ServerKeyPath,
-		s.ClientCertPath,
-	)
-	if err != nil {
-		logger.Error(err, "Error initializing TLS manager")
-		return nil, err
-	}
-
-	// Set up certificate file watcher using fsnotify
-	err = s.setupCertificateWatcher(ctx, tlsManager, logger)
-	if err != nil {
-		// Log the error but don't fail - certificate watching is optional
-		logger.Error(err, "Failed to setup certificate file watcher, continuing without it")
-	}
-
-	// Create dynamic TLS credentials
+	// Create dynamic TLS credentials that load certificates on-demand
 	creds := credentials.NewTLS(&tls.Config{
-		GetConfigForClient: tlsManager.GetConfigForConnection,
+		GetConfigForClient: s.loadTLSConfigForConnection,
 		ClientAuth:         tls.RequireAndVerifyClientCert,
 		MinVersion:         tls.VersionTLS13,
 	})
 
-	logger.Info("Set up TLS authentication")
+	logger.Info("Set up TLS authentication with on-demand certificate loading")
 	result := grpc.Creds(creds)
 
 	return &result, nil
+}
+
+// loadTLSConfigForConnection loads certificates fresh for each new connection
+func (s *Server) loadTLSConfigForConnection(_ *tls.ClientHelloInfo) (*tls.Config, error) {
+	logger := log.FromContext(context.Background()).WithValues(
+		"serverCertPath", s.ServerCertPath,
+		"serverKeyPath", s.ServerKeyPath,
+		"clientCertPath", s.ClientCertPath,
+	)
+	logger.Info("Loading TLS configuration for new connection")
+	// Load server certificate
+	cert, err := tls.LoadX509KeyPair(s.ServerCertPath, s.ServerKeyPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load server cert from %s and %s: %w", s.ServerCertPath, s.ServerKeyPath, err)
+	}
+
+	// Load client CA
+	clientCACert, err := os.ReadFile(filepath.Clean(s.ClientCertPath))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read client CA from %s: %w", s.ClientCertPath, err)
+	}
+
+	clientCAs := x509.NewCertPool()
+	if !clientCAs.AppendCertsFromPEM(clientCACert) {
+		return nil, fmt.Errorf("failed to parse client CA from %s", s.ClientCertPath)
+	}
+
+	// Create TLS config
+	return &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientCAs:    clientCAs,
+		MinVersion:   tls.VersionTLS13,
+	}, nil
 }
 
 func (s *Server) createListener(
@@ -369,66 +386,4 @@ func (s *Server) removeStaleSocket(ctx context.Context, pluginPath string) error
 	default:
 		return fmt.Errorf("error while checking for stale socket: %w", err)
 	}
-}
-
-func (s *Server) setupCertificateWatcher(ctx context.Context, tlsManager *TLSConfigManager, logger log.Logger) error {
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		return fmt.Errorf("failed to create file watcher: %w", err)
-	}
-
-	// Add certificate files to watcher
-	if err = watcher.Add(s.ServerCertPath); err != nil {
-		watcher.Close()
-		return fmt.Errorf("failed to watch server cert file %s: %w", s.ServerCertPath, err)
-	}
-
-	if err = watcher.Add(s.ServerKeyPath); err != nil {
-		watcher.Close()
-		return fmt.Errorf("failed to watch server key file %s: %w", s.ServerKeyPath, err)
-	}
-
-	if err = watcher.Add(s.ClientCertPath); err != nil {
-		watcher.Close()
-		return fmt.Errorf("failed to watch client cert file %s: %w", s.ClientCertPath, err)
-	}
-
-	// Start watching for file changes in a goroutine
-	go func() {
-		defer watcher.Close()
-		for {
-			select {
-			case <-ctx.Done():
-				logger.Info("Certificate watcher shutting down")
-				return
-			case event, ok := <-watcher.Events:
-				if !ok {
-					return
-				}
-				logger.Debug("File system event detected", "event", event.String())
-				// Check for write, create, or remove events on our certificate files
-				opNeedsReload := fsnotify.Write | fsnotify.Create | fsnotify.Remove
-				if event.Has(opNeedsReload) &&
-					(event.Name == s.ServerCertPath || event.Name == s.ServerKeyPath || event.Name == s.ClientCertPath) {
-					logger.Info("Certificate file changed, reloading TLS config", "file", event.Name)
-					if err := tlsManager.Reload(); err != nil {
-						logger.Error(err, "Failed to reload TLS config after file change")
-					} else {
-						logger.Info("TLS certificates reloaded successfully after file change")
-					}
-				}
-			case err, ok := <-watcher.Errors:
-				if !ok {
-					return
-				}
-				logger.Error(err, "File watcher error")
-			}
-		}
-	}()
-
-	logger.Info("Certificate file watcher setup successfully",
-		"serverCert", s.ServerCertPath,
-		"serverKey", s.ServerKeyPath,
-		"clientCert", s.ClientCertPath)
-	return nil
 }
