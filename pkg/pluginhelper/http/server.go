@@ -249,48 +249,54 @@ func (s *Server) setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) 
 	}
 
 	// Create dynamic TLS credentials that load certificates on-demand
-	creds := credentials.NewTLS(&tls.Config{
-		GetConfigForClient: s.loadTLSConfigForConnection,
+	tlsConfig := &tls.Config{
+		GetConfigForClient: s.getConfigForClient,
 		ClientAuth:         tls.RequireAndVerifyClientCert,
 		MinVersion:         tls.VersionTLS13,
-	})
+	}
 
-	logger.Info("Set up TLS authentication with on-demand certificate loading")
-	result := grpc.Creds(creds)
+	logger.Info("Set up TLS authentication")
+	result := grpc.Creds(credentials.NewTLS(tlsConfig))
 
 	return &result, nil
 }
 
-// loadTLSConfigForConnection loads certificates fresh for each new connection
-func (s *Server) loadTLSConfigForConnection(_ *tls.ClientHelloInfo) (*tls.Config, error) {
-	logger := log.FromContext(context.Background()).WithValues(
+// getConfigForClient loads certificates fresh for each new connection
+func (s *Server) getConfigForClient(clientHelloInfo *tls.ClientHelloInfo) (*tls.Config, error) {
+	ctx := context.Background()
+	if clientHelloInfo != nil {
+		if providedContext := clientHelloInfo.Context(); providedContext != nil {
+			ctx = providedContext
+		}
+	}
+
+	logger := log.FromContext(ctx).WithValues(
 		"serverCertPath", s.ServerCertPath,
 		"serverKeyPath", s.ServerKeyPath,
 		"clientCertPath", s.ClientCertPath,
 	)
-	logger.Info("Loading TLS configuration for new connection")
-	// Load server certificate
-	cert, err := tls.LoadX509KeyPair(s.ServerCertPath, s.ServerKeyPath)
+
+	caCertPool := x509.NewCertPool()
+	caBytes, err := os.ReadFile(filepath.Clean(s.ClientCertPath))
 	if err != nil {
-		return nil, fmt.Errorf("failed to load server cert from %s and %s: %w", s.ServerCertPath, s.ServerKeyPath, err)
+		logger.Error(err, "failed to read client CA certificate")
+		return nil, fmt.Errorf("failed to read client CA certificate from %s: %w", s.ClientCertPath, err)
+	}
+	if !caCertPool.AppendCertsFromPEM(caBytes) {
+		logger.Error(err, "failed to parse client ca certificate")
+		return nil, fmt.Errorf("failed to parse client CA certificate from %s", s.ClientCertPath)
 	}
 
-	// Load client CA
-	clientCACert, err := os.ReadFile(filepath.Clean(s.ClientCertPath))
+	serverKeyPair, err := tls.LoadX509KeyPair(s.ServerCertPath, s.ServerKeyPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read client CA from %s: %w", s.ClientCertPath, err)
+		logger.Error(err, "failed to load server key pair")
+		return nil, fmt.Errorf("failed to load server key pair from %s and %s: %w", s.ServerCertPath, s.ServerKeyPath, err)
 	}
 
-	clientCAs := x509.NewCertPool()
-	if !clientCAs.AppendCertsFromPEM(clientCACert) {
-		return nil, fmt.Errorf("failed to parse client CA from %s", s.ClientCertPath)
-	}
-
-	// Create TLS config
 	return &tls.Config{
-		Certificates: []tls.Certificate{cert},
 		ClientAuth:   tls.RequireAndVerifyClientCert,
-		ClientCAs:    clientCAs,
+		Certificates: []tls.Certificate{serverKeyPair},
+		ClientCAs:    caCertPool,
 		MinVersion:   tls.VersionTLS13,
 	}, nil
 }

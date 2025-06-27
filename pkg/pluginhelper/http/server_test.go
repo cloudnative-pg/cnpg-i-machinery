@@ -77,46 +77,62 @@ var _ = Describe("BuildTLSConfig", func() {
 		Expect(os.Remove(server.ClientCertPath)).ToNot(HaveOccurred())
 	})
 
-	It("should successfully create a TLS config", func(ctx SpecContext) {
-		// Test the load-on-demand TLS config loading
-		tlsConfig, err := server.loadTLSConfigForConnection(nil)
+	It("should successfully create a TLS config", func() {
+		tlsConfig, err := server.getConfigForClient(nil)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(tlsConfig).ToNot(BeNil())
-
-		// Verify TLS configuration properties
 		Expect(tlsConfig.ClientCAs.Subjects()).ToNot(BeEmpty()) //nolint: staticcheck
 		Expect(tlsConfig.MinVersion).To(Equal(uint16(tls.VersionTLS13)))
 		Expect(tlsConfig.ClientAuth).To(Equal(tls.RequireAndVerifyClientCert))
 		Expect(tlsConfig.Certificates).To(HaveLen(1))
-
-		// Test that calling it multiple times works (load fresh each time)
-		tlsConfig2, err := server.loadTLSConfigForConnection(nil)
-		Expect(err).ToNot(HaveOccurred())
-		Expect(tlsConfig2).ToNot(BeNil())
-		Expect(tlsConfig2.MinVersion).To(Equal(uint16(tls.VersionTLS13)))
 	})
 
-	It("should handle missing certificate files gracefully", func(ctx SpecContext) {
-		// Test with non-existent server cert
+	It("should load the certificates every time", func() {
+		tlsConfig1, err := server.getConfigForClient(nil)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(tlsConfig1).ToNot(BeNil())
+
+		tlsConfig2, err := server.getConfigForClient(nil)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(tlsConfig2).ToNot(BeNil())
+
+		Expect(tlsConfig1.Certificates).ToNot(BeIdenticalTo(tlsConfig2.Certificates))
+		Expect(tlsConfig1.ClientCAs).ToNot(BeIdenticalTo(tlsConfig2.ClientCAs))
+	})
+
+	It("should handle missing server certificate files gracefully", func() {
 		invalidServer := Server{
 			ServerCertPath: "/non/existent/cert.pem",
 			ServerKeyPath:  server.ServerKeyPath,
 			ClientCertPath: server.ClientCertPath,
 		}
 
-		_, err := invalidServer.loadTLSConfigForConnection(nil)
+		_, err := invalidServer.getConfigForClient(nil)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("failed to load server cert"))
+		Expect(err).To(MatchError(ContainSubstring("failed to load server key pair")))
+	})
 
-		// Test with non-existent client cert
-		invalidServer2 := Server{
+	It("should handle missing server key files gracefully", func() {
+		invalidServer := Server{
+			ServerCertPath: server.ServerCertPath,
+			ServerKeyPath:  "/non/existent/cert.key",
+			ClientCertPath: server.ClientCertPath,
+		}
+
+		_, err := invalidServer.getConfigForClient(nil)
+		Expect(err).To(HaveOccurred())
+		Expect(err).To(MatchError(ContainSubstring("failed to load server key pair")))
+	})
+
+	It("should handle missing client CA files gracefully", func() {
+		invalidServer := Server{
 			ServerCertPath: server.ServerCertPath,
 			ServerKeyPath:  server.ServerKeyPath,
 			ClientCertPath: "/non/existent/client.pem",
 		}
 
-		_, err = invalidServer2.loadTLSConfigForConnection(nil)
+		_, err := invalidServer.getConfigForClient(nil)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("failed to read client CA"))
+		Expect(err).To(MatchError(ContainSubstring("failed to read client CA")))
 	})
 })
