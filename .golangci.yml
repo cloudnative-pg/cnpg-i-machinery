@@ -6,9 +6,11 @@ linters:
     - exhaustruct
     - funlen
     - mnd
+    - noinlineerr
     - paralleltest
     - testpackage
     - wsl
+    - wsl_v5
   settings:
     lll:
       line-length: 120
@@ -27,6 +29,10 @@ linters:
       - linters:
           - lll
         source: //\s*\+
+      - linters:
+          - revive
+        path: pkg/pluginhelper/common/
+        text: avoid meaningless package names
     paths:
       - third_party$
       - builtin$
