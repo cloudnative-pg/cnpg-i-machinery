@@ -284,7 +284,7 @@ func (s *Server) getConfigForClient(clientHelloInfo *tls.ClientHelloInfo) (*tls.
 	}
 	if !caCertPool.AppendCertsFromPEM(caBytes) {
 		logger.Error(err, "failed to parse client ca certificate")
-		return nil, fmt.Errorf("failed to parse client CA certificate from %s", s.ClientCertPath) // nolint: err113
+		return nil, fmt.Errorf("failed to parse client CA certificate from %s", s.ClientCertPath) //nolint: err113
 	}
 
 	serverKeyPair, err := tls.LoadX509KeyPair(s.ServerCertPath, s.ServerKeyPath)
