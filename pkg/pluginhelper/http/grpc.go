@@ -62,6 +62,7 @@ func logFailedRequestsUnaryServerInterceptor(logger log.Logger) grpc.UnaryServer
 // logInjectStream wraps a grpc.ServerStream and injects a logger into the context.
 type logInjectStream struct {
 	grpc.ServerStream
+
 	logger log.Logger
 }
 
