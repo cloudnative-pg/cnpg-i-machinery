@@ -248,9 +248,11 @@ func (s *Server) setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) 
 		return nil, errNoClientCert
 	}
 
-	tlsConfig, err := s.buildTLSConfig(ctx)
-	if err != nil {
-		return nil, err
+	// Create dynamic TLS credentials that load certificates on-demand
+	tlsConfig := &tls.Config{
+		GetConfigForClient: s.getConfigForClient,
+		ClientAuth:         tls.RequireAndVerifyClientCert,
+		MinVersion:         tls.VersionTLS13,
 	}
 
 	logger.Info("Set up TLS authentication")
@@ -259,7 +261,15 @@ func (s *Server) setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) 
 	return &result, nil
 }
 
-func (s *Server) buildTLSConfig(ctx context.Context) (*tls.Config, error) {
+// getConfigForClient loads certificates fresh for each new connection.
+func (s *Server) getConfigForClient(clientHelloInfo *tls.ClientHelloInfo) (*tls.Config, error) {
+	ctx := context.Background()
+	if clientHelloInfo != nil {
+		if providedContext := clientHelloInfo.Context(); providedContext != nil {
+			ctx = providedContext
+		}
+	}
+
 	logger := log.FromContext(ctx).WithValues(
 		"serverCertPath", s.ServerCertPath,
 		"serverKeyPath", s.ServerKeyPath,
@@ -269,27 +279,25 @@ func (s *Server) buildTLSConfig(ctx context.Context) (*tls.Config, error) {
 	caCertPool := x509.NewCertPool()
 	caBytes, err := os.ReadFile(filepath.Clean(s.ClientCertPath))
 	if err != nil {
-		logger.Error(err, "failed to read client public key")
-		return nil, fmt.Errorf("failed to read client public key: %w", err)
+		logger.Error(err, "failed to read client CA certificate")
+		return nil, fmt.Errorf("failed to read client CA certificate from %s: %w", s.ClientCertPath, err)
 	}
-	if ok := caCertPool.AppendCertsFromPEM(caBytes); !ok {
-		logger.Error(err, "failed to parse client public key")
-		return nil, fmt.Errorf("failed to parse client public key: %w", err)
+	if !caCertPool.AppendCertsFromPEM(caBytes) {
+		logger.Error(err, "failed to parse client ca certificate")
+		return nil, fmt.Errorf("failed to parse client CA certificate from %s", s.ClientCertPath) //nolint: err113
+	}
+
+	serverKeyPair, err := tls.LoadX509KeyPair(s.ServerCertPath, s.ServerKeyPath)
+	if err != nil {
+		logger.Error(err, "failed to load server key pair")
+		return nil, fmt.Errorf("failed to load server key pair from %s and %s: %w", s.ServerCertPath, s.ServerKeyPath, err)
 	}
 
 	return &tls.Config{
-		ClientAuth: tls.RequireAndVerifyClientCert,
-		GetCertificate: func(_ *tls.ClientHelloInfo) (*tls.Certificate, error) {
-			cert, err := tls.LoadX509KeyPair(s.ServerCertPath, s.ServerKeyPath)
-			if err != nil {
-				logger.Error(err, "failed to load server key pair")
-				return nil, fmt.Errorf("failed to load server key pair: %w", err)
-			}
-
-			return &cert, nil
-		},
-		ClientCAs:  caCertPool,
-		MinVersion: tls.VersionTLS13,
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		Certificates: []tls.Certificate{serverKeyPair},
+		ClientCAs:    caCertPool,
+		MinVersion:   tls.VersionTLS13,
 	}, nil
 }
 
