@@ -261,7 +261,7 @@ func (s *Server) setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) 
 	return &result, nil
 }
 
-// getConfigForClient loads certificates fresh for each new connection
+// getConfigForClient loads certificates fresh for each new connection.
 func (s *Server) getConfigForClient(clientHelloInfo *tls.ClientHelloInfo) (*tls.Config, error) {
 	ctx := context.Background()
 	if clientHelloInfo != nil {
@@ -284,7 +284,7 @@ func (s *Server) getConfigForClient(clientHelloInfo *tls.ClientHelloInfo) (*tls.
 	}
 	if !caCertPool.AppendCertsFromPEM(caBytes) {
 		logger.Error(err, "failed to parse client ca certificate")
-		return nil, fmt.Errorf("failed to parse client CA certificate from %s", s.ClientCertPath)
+		return nil, fmt.Errorf("failed to parse client CA certificate from %s", s.ClientCertPath) // nolint: err113
 	}
 
 	serverKeyPair, err := tls.LoadX509KeyPair(s.ServerCertPath, s.ServerKeyPath)
