@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.4.0](https://github.com/cloudnative-pg/cnpg-i-machinery/compare/v0.3.0...v0.4.0) (2025-07-03)
+
+
+### Features
+
+* support for Kubernetes native sidecar injection ([#196](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/196)) ([0ea207c](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/0ea207c829e5deff7fc51edfbc1c57719133ad20))
+* **tls:** add client CA reload ([#197](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/197)) ([9f0abd6](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/9f0abd656267e101c99c2fc16de23fcfd9826989)), closes [#174](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/174)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major go dependencies ([#181](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/181)) ([5b6e4ae](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/5b6e4aea6f18b211943fd9ec1ee6d3e68c3ad266))
+* **deps:** update all non-major go dependencies ([#191](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/191)) ([c7e2dcf](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/c7e2dcf290d3012ccc53d81b54ecd8aa82239fef))
+* **deps:** update all non-major go dependencies ([#195](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/195)) ([cf6f8ee](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/cf6f8ee1fe72526f53e4bdad007a8a525d404796))
+* **deps:** update module github.com/cloudnative-pg/machinery to v0.3.0 ([#199](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/199)) ([34c5d73](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/34c5d7325ff15c63341f3c125e2a4c1fc6f93ad1))
+
 ## [0.3.0](https://github.com/cloudnative-pg/cnpg-i-machinery/compare/v0.2.1...v0.3.0) (2025-04-17)
 
 
