@@ -1,11 +1,11 @@
 module github.com/cloudnative-pg/cnpg-i-machinery
 
-go 1.24.0
+go 1.24.1
 
 toolchain go1.24.4
 
 require (
-	github.com/cloudnative-pg/api v1.25.1
+	github.com/cloudnative-pg/api v1.26.0
 	github.com/cloudnative-pg/cnpg-i v0.2.1
 	github.com/cloudnative-pg/machinery v0.3.0
 	github.com/go-logr/logr v1.4.3
@@ -25,7 +25,7 @@ require (
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/cloudnative-pg/barman-cloud v0.1.0 // indirect
+	github.com/cloudnative-pg/barman-cloud v0.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/emicklei/go-restful/v3 v3.12.1 // indirect
 	github.com/evanphx/json-patch/v5 v5.9.11 // indirect
