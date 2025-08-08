@@ -322,7 +322,9 @@ func (s *Server) createTCPListener(ctx context.Context) (net.Listener, error) {
 	)
 
 	// Start accepting connections on the server address
-	listener, err := net.Listen(
+	lc := &net.ListenConfig{}
+	listener, err := lc.Listen(
+		ctx,
 		tcpNetwork,
 		s.ServerAddress,
 	)
@@ -359,7 +361,9 @@ func (s *Server) createUnixDomainSocketListener(
 	)
 
 	// Start accepting connections on the socket
-	listener, err := net.Listen(
+	lc := &net.ListenConfig{}
+	listener, err := lc.Listen(
+		ctx,
 		unixNetwork,
 		socketName,
 	)
