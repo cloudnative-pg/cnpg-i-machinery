@@ -61,20 +61,20 @@ var _ = Describe("BuildTLSConfig", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		server = Server{
-			IdentityImpl:   nil,
-			Enrichers:      nil,
-			ServerCertPath: serverCertPath,
-			ServerKeyPath:  serverKeyPath,
-			ClientCertPath: clientCertPath,
-			ServerAddress:  "",
-			PluginPath:     "",
+			IdentityImpl:     nil,
+			Enrichers:        nil,
+			ServerCertPath:   serverCertPath,
+			ServerKeyPath:    serverKeyPath,
+			ClientCACertPath: clientCertPath,
+			ServerAddress:    "",
+			PluginPath:       "",
 		}
 	})
 
 	AfterEach(func() {
 		Expect(os.Remove(server.ServerCertPath)).ToNot(HaveOccurred())
 		Expect(os.Remove(server.ServerKeyPath)).ToNot(HaveOccurred())
-		Expect(os.Remove(server.ClientCertPath)).ToNot(HaveOccurred())
+		Expect(os.Remove(server.ClientCACertPath)).ToNot(HaveOccurred())
 	})
 
 	It("should successfully create a TLS config", func() {
@@ -102,9 +102,9 @@ var _ = Describe("BuildTLSConfig", func() {
 
 	It("should handle missing server certificate files gracefully", func() {
 		invalidServer := Server{
-			ServerCertPath: "/non/existent/cert.pem",
-			ServerKeyPath:  server.ServerKeyPath,
-			ClientCertPath: server.ClientCertPath,
+			ServerCertPath:   "/non/existent/cert.pem",
+			ServerKeyPath:    server.ServerKeyPath,
+			ClientCACertPath: server.ClientCACertPath,
 		}
 
 		_, err := invalidServer.getConfigForClient(nil)
@@ -114,9 +114,9 @@ var _ = Describe("BuildTLSConfig", func() {
 
 	It("should handle missing server key files gracefully", func() {
 		invalidServer := Server{
-			ServerCertPath: server.ServerCertPath,
-			ServerKeyPath:  "/non/existent/cert.key",
-			ClientCertPath: server.ClientCertPath,
+			ServerCertPath:   server.ServerCertPath,
+			ServerKeyPath:    "/non/existent/cert.key",
+			ClientCACertPath: server.ClientCACertPath,
 		}
 
 		_, err := invalidServer.getConfigForClient(nil)
@@ -126,9 +126,9 @@ var _ = Describe("BuildTLSConfig", func() {
 
 	It("should handle missing client CA files gracefully", func() {
 		invalidServer := Server{
-			ServerCertPath: server.ServerCertPath,
-			ServerKeyPath:  server.ServerKeyPath,
-			ClientCertPath: "/non/existent/client.pem",
+			ServerCertPath:   server.ServerCertPath,
+			ServerKeyPath:    server.ServerKeyPath,
+			ClientCACertPath: "/non/existent/client.pem",
 		}
 
 		_, err := invalidServer.getConfigForClient(nil)
