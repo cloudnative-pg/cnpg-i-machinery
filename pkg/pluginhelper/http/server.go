@@ -46,9 +46,9 @@ const (
 )
 
 var (
-	errNoServerCert = errors.New("TCP server active, but no server-cert value passed")
-	errNoServerKey  = errors.New("TCP server active, but no server-key value passed")
-	errNoClientCert = errors.New("TCP server active, but no client-cert value passed")
+	errNoServerCert   = errors.New("TCP server active, but no server-cert value passed")
+	errNoServerKey    = errors.New("TCP server active, but no server-key value passed")
+	errNoClientCACert = errors.New("TCP server active, but no client-ca-cert value passed")
 )
 
 // ServerEnricher is the type of functions that can add register
@@ -74,13 +74,13 @@ func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnri
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			srv := &Server{
-				IdentityImpl:   identityImpl,
-				Enrichers:      enrichers,
-				ServerCertPath: viper.GetString("server-cert"),
-				ServerKeyPath:  viper.GetString("server-key"),
-				ClientCertPath: viper.GetString("client-cert"),
-				ServerAddress:  viper.GetString("server-address"),
-				PluginPath:     viper.GetString("plugin-path"),
+				IdentityImpl:     identityImpl,
+				Enrichers:        enrichers,
+				ServerCertPath:   viper.GetString("server-cert"),
+				ServerKeyPath:    viper.GetString("server-key"),
+				ClientCACertPath: viper.GetString("client-ca-cert"),
+				ServerAddress:    viper.GetString("server-address"),
+				PluginPath:       viper.GetString("plugin-path"),
 			}
 
 			return srv.Start(cmd.Context())
@@ -116,11 +116,11 @@ func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnri
 	_ = viper.BindPFlag("server-key", cmd.Flags().Lookup("server-key"))
 
 	cmd.Flags().String(
-		"client-cert",
+		"client-ca-cert",
 		"",
-		"The client public key to verify the connection",
+		"The CA certificate to verify client connections",
 	)
-	_ = viper.BindPFlag("client-cert", cmd.Flags().Lookup("client-cert"))
+	_ = viper.BindPFlag("client-ca-cert", cmd.Flags().Lookup("client-ca-cert"))
 
 	cmd.Flags().String(
 		"server-address",
@@ -129,7 +129,7 @@ func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnri
 	)
 	_ = viper.BindPFlag("server-address", cmd.Flags().Lookup("server-address"))
 
-	cmd.MarkFlagsRequiredTogether("server-cert", "server-key", "client-cert", "server-address")
+	cmd.MarkFlagsRequiredTogether("server-cert", "server-key", "client-ca-cert", "server-address")
 	cmd.MarkFlagsMutuallyExclusive("server-cert", "plugin-path")
 
 	return cmd
@@ -137,11 +137,11 @@ func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnri
 
 // Server is the main structure to start a GRPC server.
 type Server struct {
-	IdentityImpl   identity.IdentityServer
-	Enrichers      []ServerEnricher
-	ServerCertPath string
-	ServerKeyPath  string
-	ClientCertPath string
+	IdentityImpl     identity.IdentityServer
+	Enrichers        []ServerEnricher
+	ServerCertPath   string
+	ServerKeyPath    string
+	ClientCACertPath string
 	// mutually exclusive with pluginPath
 	ServerAddress string
 	// mutually exclusive with serverAddress
@@ -226,14 +226,14 @@ func (s *Server) Start(ctx context.Context) error {
 }
 
 func (s *Server) isTLSEnabled() bool {
-	return s.ServerCertPath != "" || s.ServerKeyPath != "" || s.ClientCertPath != ""
+	return s.ServerCertPath != "" || s.ServerKeyPath != "" || s.ClientCACertPath != ""
 }
 
 func (s *Server) setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) {
 	logger := log.FromContext(ctx).WithValues(
 		"serverCertPath", s.ServerCertPath,
 		"serverKeyPath", s.ServerKeyPath,
-		"clientCertPath", s.ClientCertPath,
+		"clientCACertPath", s.ClientCACertPath,
 	)
 
 	if s.ServerCertPath == "" {
@@ -244,8 +244,8 @@ func (s *Server) setupTLSCerts(ctx context.Context) (*grpc.ServerOption, error) 
 		return nil, errNoServerKey
 	}
 
-	if s.ClientCertPath == "" {
-		return nil, errNoClientCert
+	if s.ClientCACertPath == "" {
+		return nil, errNoClientCACert
 	}
 
 	// Create dynamic TLS credentials that load certificates on-demand
@@ -273,18 +273,18 @@ func (s *Server) getConfigForClient(clientHelloInfo *tls.ClientHelloInfo) (*tls.
 	logger := log.FromContext(ctx).WithValues(
 		"serverCertPath", s.ServerCertPath,
 		"serverKeyPath", s.ServerKeyPath,
-		"clientCertPath", s.ClientCertPath,
+		"clientCACertPath", s.ClientCACertPath,
 	)
 
 	caCertPool := x509.NewCertPool()
-	caBytes, err := os.ReadFile(filepath.Clean(s.ClientCertPath))
+	caBytes, err := os.ReadFile(filepath.Clean(s.ClientCACertPath))
 	if err != nil {
 		logger.Error(err, "failed to read client CA certificate")
-		return nil, fmt.Errorf("failed to read client CA certificate from %s: %w", s.ClientCertPath, err)
+		return nil, fmt.Errorf("failed to read client CA certificate from %s: %w", s.ClientCACertPath, err)
 	}
 	if !caCertPool.AppendCertsFromPEM(caBytes) {
 		logger.Error(err, "failed to parse client ca certificate")
-		return nil, fmt.Errorf("failed to parse client CA certificate from %s", s.ClientCertPath) //nolint: err113
+		return nil, fmt.Errorf("failed to parse client CA certificate from %s", s.ClientCACertPath) //nolint: err113
 	}
 
 	serverKeyPair, err := tls.LoadX509KeyPair(s.ServerCertPath, s.ServerKeyPath)
