@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.4.1](https://github.com/cloudnative-pg/cnpg-i-machinery/compare/v0.4.0...v0.4.1) (2025-09-24)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major go dependencies ([#203](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/203)) ([c5feb94](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/c5feb94e90fef9717113705526a15733af66863a))
+* **deps:** update all non-major go dependencies ([#212](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/212)) ([c7ddf28](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/c7ddf28d72acea9ec5523d6cd1a8000bd604d2e1))
+* **deps:** update all non-major go dependencies ([#215](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/215)) ([adc1c66](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/adc1c663c1c4acb07a30c3d26f7fedee8d44caf7))
+* **deps:** update all non-major go dependencies ([#221](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/221)) ([ecbb3c4](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/ecbb3c47bf5d0a1d117d049079348ceec32fc004))
+* reduce noisy logs for expected gRPC errors ([#227](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/227)) ([b88a426](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/b88a42687dd20c19d57ea72afa3a4b86b5604c38))
+
 ## [0.4.0](https://github.com/cloudnative-pg/cnpg-i-machinery/compare/v0.3.0...v0.4.0) (2025-07-03)
 
 
