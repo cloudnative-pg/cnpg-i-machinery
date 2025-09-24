@@ -21,6 +21,8 @@ import (
 
 	"github.com/cloudnative-pg/machinery/pkg/log"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // loggingUnaryServerInterceptor injects the passed logger into the gRPC call context for all inbound unary calls.
@@ -47,7 +49,7 @@ func logFailedRequestsUnaryServerInterceptor(logger log.Logger) grpc.UnaryServer
 		handler grpc.UnaryHandler,
 	) (interface{}, error) {
 		result, err := handler(ctx, req)
-		if err != nil {
+		if status.Convert(err).Code() == codes.Unknown {
 			logger.Error(
 				err,
 				"Error while handling GRPC request",
@@ -85,7 +87,7 @@ func loggingStreamServerInterceptor(logger log.Logger) grpc.StreamServerIntercep
 func logFailedRequestsStreamServerInterceptor(logger log.Logger) grpc.StreamServerInterceptor {
 	return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		err := handler(srv, ss)
-		if err != nil {
+		if status.Convert(err).Code() == codes.Unknown {
 			logger.Error(
 				err,
 				"Error while handling GRPC request",
