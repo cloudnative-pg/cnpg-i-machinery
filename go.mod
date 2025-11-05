@@ -2,7 +2,7 @@ module github.com/cloudnative-pg/cnpg-i-machinery
 
 go 1.24.1
 
-toolchain go1.25.1
+toolchain go1.25.3
 
 require (
 	github.com/cloudnative-pg/api v1.27.0
