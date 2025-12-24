@@ -71,7 +71,7 @@ func (s SetStatusInClusterResponseBuilder) JSONStatusResponse(obj any) (*operato
 		return nil, fmt.Errorf("while marshalling resource definition: %w", err)
 	}
 
-	var js map[string]interface{}
+	var js map[string]any
 	if err := json.Unmarshal(jsonObject, &js); err != nil {
 		return nil, NotAnObjectError{representation: jsonObject}
 	}
