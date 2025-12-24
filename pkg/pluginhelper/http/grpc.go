@@ -31,10 +31,10 @@ import (
 func loggingUnaryServerInterceptor(logger log.Logger) grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
-		req interface{},
+		req any,
 		_ *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
-	) (interface{}, error) {
+	) (any, error) {
 		newCtx := log.IntoContext(ctx, logger)
 		return handler(newCtx, req)
 	}
@@ -44,10 +44,10 @@ func loggingUnaryServerInterceptor(logger log.Logger) grpc.UnaryServerIntercepto
 func logFailedRequestsUnaryServerInterceptor(logger log.Logger) grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
-		req interface{},
+		req any,
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
-	) (interface{}, error) {
+	) (any, error) {
 		result, err := handler(ctx, req)
 		if status.Convert(err).Code() == codes.Unknown {
 			logger.Error(
