@@ -73,12 +73,20 @@ func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnri
 		},
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCACertPath := viper.GetString("client-ca-cert")
+			if clientCACertPath == "" {
+				clientCACertPath = viper.GetString("client-cert")
+				if clientCACertPath != "" {
+					fmt.Fprintf(cmd.ErrOrStderr(), "Warning: --client-cert is deprecated, use --client-ca-cert instead\n")
+				}
+			}
+
 			srv := &Server{
 				IdentityImpl:     identityImpl,
 				Enrichers:        enrichers,
 				ServerCertPath:   viper.GetString("server-cert"),
 				ServerKeyPath:    viper.GetString("server-key"),
-				ClientCACertPath: viper.GetString("client-ca-cert"),
+				ClientCACertPath: clientCACertPath,
 				ServerAddress:    viper.GetString("server-address"),
 				PluginPath:       viper.GetString("plugin-path"),
 			}
@@ -121,6 +129,14 @@ func CreateMainCmd(identityImpl identity.IdentityServer, enrichers ...ServerEnri
 		"The CA certificate to verify client connections",
 	)
 	_ = viper.BindPFlag("client-ca-cert", cmd.Flags().Lookup("client-ca-cert"))
+
+	// Deprecated flag for backward compatibility
+	cmd.Flags().String(
+		"client-cert",
+		"",
+		"Deprecated: Use --client-ca-cert instead. The CA certificate to verify client connections",
+	)
+	_ = viper.BindPFlag("client-cert", cmd.Flags().Lookup("client-cert"))
 
 	cmd.Flags().String(
 		"server-address",
