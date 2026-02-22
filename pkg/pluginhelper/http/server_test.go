@@ -136,3 +136,17 @@ var _ = Describe("BuildTLSConfig", func() {
 		Expect(err).To(MatchError(ContainSubstring("failed to read client CA")))
 	})
 })
+
+var _ = Describe("CreateMainCmd", func() {
+	It("should accept the new --client-ca-cert flag", func() {
+		cmd := CreateMainCmd(nil)
+		Expect(cmd.Flags().Lookup("client-ca-cert")).ToNot(BeNil())
+		Expect(cmd.Flags().Lookup("client-ca-cert").Usage).To(ContainSubstring("CA certificate"))
+	})
+
+	It("should accept the deprecated --client-cert flag", func() {
+		cmd := CreateMainCmd(nil)
+		Expect(cmd.Flags().Lookup("client-cert")).ToNot(BeNil())
+		Expect(cmd.Flags().Lookup("client-cert").Usage).To(ContainSubstring("Deprecated"))
+	})
+})
