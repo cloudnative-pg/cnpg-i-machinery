@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.3](https://github.com/cloudnative-pg/cnpg-i-machinery/compare/v0.4.2...v0.4.3) (2026-03-11)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major go dependencies ([#239](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/239)) ([a3c0c92](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/a3c0c9242af096f248ad7369b56e0f9f72c59f61))
+
 ## [0.4.2](https://github.com/cloudnative-pg/cnpg-i-machinery/compare/v0.4.1...v0.4.2) (2025-12-24)
 
 
