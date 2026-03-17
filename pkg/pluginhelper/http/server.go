@@ -218,7 +218,7 @@ func (s *Server) Start(ctx context.Context) error {
 		grpcServer.Stop()
 	}()
 
-	if err = grpcServer.Serve(listener); !errors.Is(err, net.ErrClosed) {
+	if err = grpcServer.Serve(listener); err != nil && !errors.Is(err, net.ErrClosed) {
 		logger.Error(err, "While terminating server")
 	}
 
