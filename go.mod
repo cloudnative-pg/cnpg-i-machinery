@@ -6,7 +6,7 @@ toolchain go1.26.1
 
 require (
 	github.com/cloudnative-pg/api v1.28.1
-	github.com/cloudnative-pg/cnpg-i v0.3.1
+	github.com/cloudnative-pg/cnpg-i v0.4.0
 	github.com/cloudnative-pg/machinery v0.3.3
 	github.com/go-logr/logr v1.4.3
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.3
@@ -18,7 +18,7 @@ require (
 	google.golang.org/grpc v1.79.3
 	k8s.io/api v0.35.3
 	k8s.io/apimachinery v0.35.3
-	k8s.io/utils v0.0.0-20260210185600-b8788abfbbc2
+	k8s.io/utils v0.0.0-20260319190234-28399d86e0b5
 	sigs.k8s.io/controller-runtime v0.23.3
 )
 
