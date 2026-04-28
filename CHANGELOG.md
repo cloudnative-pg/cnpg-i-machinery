@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.5.0](https://github.com/cloudnative-pg/cnpg-i-machinery/compare/v0.4.2...v0.5.0) (2026-04-28)
+
+
+### Features
+
+* **ip:** assign copyright to the Linux Foundation ([#265](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/265)) ([b18f058](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/b18f05896601035bdd74693f30d53abfce9b6375))
+
+
+### Bug Fixes
+
+* **deps:** update all non-major go dependencies ([#239](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/239)) ([a3c0c92](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/a3c0c9242af096f248ad7369b56e0f9f72c59f61))
+* **deps:** update all non-major go dependencies ([#254](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/254)) ([a33432c](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/a33432c24cfe59d337a5960432f3a89d45eb57ef))
+* **deps:** update all non-major go dependencies ([#257](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/257)) ([1a86e13](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/1a86e130377a2eb270929f9945cfc3eb621995a2))
+* **deps:** update all non-major go dependencies to v0.35.3 ([#250](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/250)) ([fe13760](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/fe137608f6b9f2d9cf891f79d8de36b9dd93d6a1))
+* **deps:** update module github.com/cloudnative-pg/cnpg-i to v0.5.0 ([#256](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/256)) ([33d5bc5](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/33d5bc564532ba2727a89eb907ee428074ad7eea))
+* **deps:** update module github.com/cloudnative-pg/machinery to v0.4.0 ([#262](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/262)) ([b64eac0](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/b64eac019ef4a1d8332d603ce38e62b5531b2f6e))
+* **deps:** update module google.golang.org/grpc to v1.79.3 [security] ([#251](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/251)) ([2ad0e3e](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/2ad0e3e4d852a68b3a70ff69db2e36803b4dfa42))
+* **pluginhelper:** add nil check before error comparison in gRPC server shutdown ([#247](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/247)) ([a040f60](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/a040f60a3db016053be058fbbcca77f616ebc96d))
+
 ## [0.4.2](https://github.com/cloudnative-pg/cnpg-i-machinery/compare/v0.4.1...v0.4.2) (2025-12-24)
 
 
