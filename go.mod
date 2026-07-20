@@ -4,7 +4,7 @@ go 1.26.4
 
 require (
 	github.com/cloudnative-pg/api v1.30.0
-	github.com/cloudnative-pg/cnpg-i v0.5.0
+	github.com/cloudnative-pg/cnpg-i v0.6.0
 	github.com/cloudnative-pg/machinery v0.5.0
 	github.com/go-logr/logr v1.4.3
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.3
