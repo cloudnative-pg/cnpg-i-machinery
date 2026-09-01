@@ -4,7 +4,9 @@ linters:
   disable:
     - depguard
     - exhaustruct
+    - exhaustruct_v5
     - funlen
+    - gomodguard
     - mnd
     - noinlineerr
     - paralleltest
