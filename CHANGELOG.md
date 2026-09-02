@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.5.0](https://github.com/cloudnative-pg/cnpg-i-machinery/compare/v0.4.2...v0.5.0) (2026-09-02)
+
+
+### Features
+
+* **ip:** assign copyright to the Linux Foundation ([#265](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/265)) ([b18f058](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/b18f05896601035bdd74693f30d53abfce9b6375))
+
+
+### Bug Fixes
+
+* **deps:** update all non-major go dependencies ([#239](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/239)) ([a3c0c92](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/a3c0c9242af096f248ad7369b56e0f9f72c59f61))
+* **deps:** update all non-major go dependencies ([#254](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/254)) ([a33432c](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/a33432c24cfe59d337a5960432f3a89d45eb57ef))
+* **deps:** update all non-major go dependencies ([#257](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/257)) ([1a86e13](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/1a86e130377a2eb270929f9945cfc3eb621995a2))
+* **deps:** update all non-major go dependencies ([#264](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/264)) ([5263864](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/52638641bff1a9961802d17ed1b21a49d2de6a32))
+* **deps:** update all non-major go dependencies ([#285](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/285)) ([c572a78](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/c572a7833284d24872d8596f5a95160049456328))
+* **deps:** update all non-major go dependencies ([#289](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/289)) ([6cbd9a4](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/6cbd9a47af1e278931e0e7ed3c2aabdb495dd701))
+* **deps:** update all non-major go dependencies ([#308](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/308)) ([23f6c8f](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/23f6c8f69f969f214bcaf21ab0e9688be0258e51))
+* **deps:** update all non-major go dependencies ([#315](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/315)) ([078d631](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/078d631333bb89b4d10ddc04c4ab974d82b1baf2))
+* **deps:** update all non-major go dependencies ([#318](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/318)) ([ab0ca2c](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/ab0ca2c8188d3febdf49cba1a5761365e0c7414a))
+* **deps:** update all non-major go dependencies ([#327](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/327)) ([9d530f6](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/9d530f613c19617993416f9f6322164b46fb7187))
+* **deps:** update all non-major go dependencies to a95e086 ([#311](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/311)) ([d8adce9](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/d8adce93d394fbdde2dfb243ed2f5671ad0d122b))
+* **deps:** update all non-major go dependencies to v0.35.3 ([#250](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/250)) ([fe13760](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/fe137608f6b9f2d9cf891f79d8de36b9dd93d6a1))
+* **deps:** update k8s.io/utils digest to ff6756f ([#276](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/276)) ([69524fb](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/69524fb78caf6a55868071f438dc92f694b68dab))
+* **deps:** update module github.com/cloudnative-pg/api to v1.29.1 ([#284](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/284)) ([2ff0fbf](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/2ff0fbf9efdc16074a385df61024622ca0e744d7))
+* **deps:** update module github.com/cloudnative-pg/cnpg-i to v0.5.0 ([#256](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/256)) ([33d5bc5](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/33d5bc564532ba2727a89eb907ee428074ad7eea))
+* **deps:** update module github.com/cloudnative-pg/cnpg-i to v0.6.0 ([#326](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/326)) ([5686416](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/5686416efbbfec9da4eb0c7ca635524dfcb6a29b))
+* **deps:** update module github.com/cloudnative-pg/machinery to v0.4.0 ([#262](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/262)) ([b64eac0](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/b64eac019ef4a1d8332d603ce38e62b5531b2f6e))
+* **deps:** update module github.com/cloudnative-pg/machinery to v0.5.0 ([#297](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/297)) ([2d33c98](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/2d33c98af31a7360fcfadc40e7b241d296bd7fe8))
+* **deps:** update module google.golang.org/grpc to v1.79.3 [security] ([#251](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/251)) ([2ad0e3e](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/2ad0e3e4d852a68b3a70ff69db2e36803b4dfa42))
+* **deps:** update module google.golang.org/grpc to v1.81.1 ([#288](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/288)) ([fb807bd](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/fb807bde027a74ba47b3836fd790e5cafb8afcc4))
+* **deps:** update module google.golang.org/grpc to v1.82.1 ([#323](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/323)) ([86ed023](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/86ed023c3087a48175d628c79cc8d980c300a82b))
+* **deps:** update module google.golang.org/grpc to v1.83.1 [security] ([#334](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/334)) ([22d1037](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/22d1037b919b61d1ca04e024447c9651f66ea16c))
+* **pluginhelper:** add nil check before error comparison in gRPC server shutdown ([#247](https://github.com/cloudnative-pg/cnpg-i-machinery/issues/247)) ([a040f60](https://github.com/cloudnative-pg/cnpg-i-machinery/commit/a040f60a3db016053be058fbbcca77f616ebc96d))
+
 ## [0.4.2](https://github.com/cloudnative-pg/cnpg-i-machinery/compare/v0.4.1...v0.4.2) (2025-12-24)
 
 
