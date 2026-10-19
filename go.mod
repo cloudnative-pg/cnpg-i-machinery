@@ -8,7 +8,7 @@ require (
 	github.com/cloudnative-pg/machinery v0.6.1
 	github.com/go-logr/logr v1.4.4
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.4
-	github.com/onsi/ginkgo/v2 v2.33.0
+	github.com/onsi/ginkgo/v2 v2.33.1
 	github.com/onsi/gomega v1.44.0
 	github.com/snorwin/jsonpatch v1.5.0
 	github.com/spf13/cobra v1.10.2
